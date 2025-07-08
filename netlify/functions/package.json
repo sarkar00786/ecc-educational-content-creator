@@ -1,0 +1,17 @@
+{
+  "name": "functions",
+  "version": "1.0.0",
+  "description": "",
+  "main": "generate-content.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "nodemailer": "^7.0.5"
+  }
+}
