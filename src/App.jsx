@@ -148,85 +148,91 @@ const App = () => {
   const [modalMessage, setModalMessage] = useState(''); // For success modal
 
   // --- Content History (Content Saving & History, Search & Filtering) ---
-  const [contentHistory, setContentHistory] = useState([]);
-  const [searchTerm, setSearchTerm] = useState(''); // For searching content history
-  const [feedbackText, setFeedbackText] = useState(''); // For feedback mechanism
+const [contentHistory, setContentHistory] = useState([]);
+const [searchTerm, setSearchTerm] = useState('');
+const [feedbackText, setFeedbackText] = useState('');
 
-  // --- Content Naming & Renaming ---
-  const [currentContentId, setCurrentContentId] = useState(null); // ID of the currently displayed content
-  const [currentContentName, setCurrentContentName] = useState(''); // Name of the currently displayed content
-  const [isRenaming, setIsRenaming] = useState(false); // State to toggle renaming input
+// --- Content Naming & Renaming ---
+const [currentContentId, setCurrentContentId] = useState(null);
+const [currentContentName, setCurrentContentName] = useState('');
+const [isRenaming, setIsRenaming] = useState(false);
 
-  // --- Quiz State (Feature 8) ---
-  const [quizzes, setQuizzes] = useState([]);
-  const [quizAnswers, setQuizAnswers] = useState({}); // Stores user's answers for text-based quiz
-  const [quizFeedback, setQuizFeedback] = useState({}); // Stores feedback for text-based quiz
+// --- Quiz State ---
+const [quizzes, setQuizzes] = useState([]);
+const [quizAnswers, setQuizAnswers] = useState({});
+const [quizFeedback, setQuizFeedback] = useState({});
 
-  // --- useEffect for Firebase Initialization and Auth State Management ---
-  useEffect(() => {
-    // Initialize Firebase only once
-    if (!firebaseApp) {
-      console.log("Firebase Config received by App:", firebaseConfig);
-      firebaseApp = initializeApp(firebaseConfig);
-      auth = getAuth(firebaseApp);
-      db = getFirestore(firebaseApp);
-    }
-
-    // Sign in with custom token if available, otherwise anonymously
-    const signInUser = async () => {
-      try {
-        if (initialAuthToken) {
-          await signInWithCustomToken(auth, initialAuthToken);
-        } else {
-          await signInAnonymously(auth);
-        }
-      } catch (err) {
-        console.error("Firebase initial sign-in error:", err);
-        setModalError(`Authentication error: ${err.message}`);
-      } finally {
-        setIsAuthReady(true); // Auth system is ready regardless of sign-in method
-      }
-    };
-
-    signInUser();
-
-    // Set up Auth State Listener
-    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
-        setUserIdDisplay(currentUser.uid); // Display actual user ID
-        setModalMessage(`Welcome, ${currentUser.email || 'Guest User'}!`);
-        setAuthMode('app'); // Go to main app once logged in
-      } else {
-        setUserIdDisplay('Not Logged In');
-        setAuthMode('landing'); // Go to landing page if not logged in
-      }
-    });
-
-    // Cleanup function for Auth Listener
-    return () => {
-      unsubscribeAuth();
-    };
-  }, []); // Empty dependency array means this runs once on mount
-
-  // --- useEffect for Firestore Content History Listener ---
-  useEffect(() => {
-  if (!db || !user?.uid || !isAuthReady || authMode !== 'app') {
-    console.warn('Firestore listener skipped — missing db, user, or authMode is not app');
-    return;
+// --- Firebase Auth Init ---
+useEffect(() => {
+  if (!firebaseApp) {
+    console.log("Firebase Config received by App:", firebaseConfig);
+    firebaseApp = initializeApp(firebaseConfig);
+    auth = getAuth(firebaseApp);
+    db = getFirestore(firebaseApp);
   }
 
+  const signInUser = async () => {
+    try {
+      if (initialAuthToken) {
+        await signInWithCustomToken(auth, initialAuthToken);
+      } else {
+        await signInAnonymously(auth);
+      }
+    } catch (err) {
+      console.error("Firebase initial sign-in error:", err);
+      setModalError(`Authentication error: ${err.message}`);
+    } finally {
+      setIsAuthReady(true);
+    }
+  };
+
+  signInUser();
+
+  const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+    setUser(currentUser);
+    if (currentUser) {
+      setUserIdDisplay(currentUser.uid);
+      setModalMessage(`Welcome, ${currentUser.email || 'Guest User'}!`);
+      setAuthMode('app');
+    } else {
+      setUserIdDisplay('Not Logged In');
+      setAuthMode('landing');
+    }
+  });
+
+  return () => unsubscribeAuth();
+}, []);
+
+// --- Fetch Once (on Login) ---
+useEffect(() => {
+  const fetchContentHistory = async () => {
+    if (!db || !user || authMode !== 'app') return;
+
+    try {
+      const q = query(
+        collection(db, `artifacts/${appId}/users/${user.uid}/generatedContent`),
+        orderBy("timestamp", "desc")
+      );
+      const snapshot = await getDocs(q);
+      const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setContentHistory(list);
+    } catch (err) {
+      console.error('🔥 Failed to fetch content history:', err);
+    }
+  };
+
+  fetchContentHistory();
+}, [db, user, authMode]);
+
+// --- Real-time Firestore Listener ---
+useEffect(() => {
+  if (!db || !user?.uid || !isAuthReady || authMode !== 'app') return;
+
   const path = `artifacts/${appId}/users/${user.uid}/generatedContent`;
-  console.log("🔍 Firestore Path:", path);
+  const q = query(collection(db, path));
 
-  const userContentCollectionRef = collection(db, path);
-  const q = query(userContentCollectionRef);
-
-  const unsubscribeFirestore = onSnapshot(q, (snapshot) => {
-    const history = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const history = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     history.sort((a, b) => (b.timestamp?.toDate() || 0) - (a.timestamp?.toDate() || 0));
     setContentHistory(history);
   }, (err) => {
@@ -234,77 +240,73 @@ const App = () => {
     setModalError(`Failed to load history: ${err.message}`);
   });
 
-  return () => unsubscribeFirestore();
-}, [db, user, isAuthReady, appId, authMode]);
+  return () => unsubscribe();
+}, [db, user, isAuthReady, authMode]);
 
-  // --- Authentication Handlers (User Authentication, User Profile Management) ---
-  const handleAuth = async (isSignUp) => {
-    setModalError('');
-    setModalMessage('');
-    setIsLoading(true);
+// --- Handle Email Auth ---
+const handleAuth = async (isSignUp) => {
+  setModalError('');
+  setModalMessage('');
+  setIsLoading(true);
 
-    // Client-side validation for password length
-    if (isSignUp && password.length < 6) {
-      setModalError('Password should be at least 6 characters long.');
-      setIsLoading(false);
-      return;
-    }
+  if (isSignUp && password.length < 6) {
+    setModalError('Password should be at least 6 characters.');
+    setIsLoading(false);
+    return;
+  }
 
-    try {
-      if (isSignUp) {
-        await createUserWithEmailAndPassword(auth, email, password);
-        // Save user profile data to Firestore
-        const userRef = doc(db, `artifacts/${appId}/users/${auth.currentUser.uid}`);
-        await setDoc(userRef, {
-          uid: auth.currentUser.uid,
-          email: auth.currentUser.email,
-          createdAt: serverTimestamp(),
-        }, { merge: true }); // Use merge: true to avoid overwriting if doc exists
-        setModalMessage('Account created successfully! You are now logged in.');
-      } else {
-        await signInWithEmailAndPassword(auth, email, password);
-        setModalMessage('Logged in successfully!');
-      }
-      setAuthMode('app'); // Navigate to the main app after successful auth
-    } catch (err) {
-      console.error("Auth error:", err);
-      let errorMessage = `Authentication failed: ${err.message}`;
-      if (err.code === 'auth/operation-not-allowed') {
-        errorMessage += ". Please enable 'Email/Password' sign-in method in your Firebase project's Authentication settings.";
-      }
-      setModalError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Feature 14: Google Sign-In
-  const handleGoogleSignIn = async () => {
-    setModalError('');
-    setModalMessage('');
-    setIsLoading(true);
-    try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      // Save user profile data to Firestore for Google sign-in
+  try {
+    if (isSignUp) {
+      await createUserWithEmailAndPassword(auth, email, password);
       const userRef = doc(db, `artifacts/${appId}/users/${auth.currentUser.uid}`);
       await setDoc(userRef, {
         uid: auth.currentUser.uid,
         email: auth.currentUser.email,
-        displayName: auth.currentUser.displayName,
-        photoURL: auth.currentUser.photoURL,
         createdAt: serverTimestamp(),
       }, { merge: true });
-      setModalMessage('Logged in with Google successfully!');
-      setAuthMode('app');
-    } catch (err) {
-      console.error("Google Sign-In error:", err);
-      setModalError(`Google Sign-In failed: ${err.message}`);
-    } finally {
-      setIsLoading(false);
+      setModalMessage('Account created!');
+    } else {
+      await signInWithEmailAndPassword(auth, email, password);
+      setModalMessage('Logged in successfully!');
     }
-  };
+    setAuthMode('app');
+  } catch (err) {
+    console.error("Auth error:", err);
+    let msg = `Authentication failed: ${err.message}`;
+    if (err.code === 'auth/operation-not-allowed') {
+      msg += " (Enable Email/Password auth in Firebase)";
+    }
+    setModalError(msg);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
+// --- Google Auth ---
+const handleGoogleSignIn = async () => {
+  setModalError('');
+  setModalMessage('');
+  setIsLoading(true);
+  try {
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
+    const userRef = doc(db, `artifacts/${appId}/users/${auth.currentUser.uid}`);
+    await setDoc(userRef, {
+      uid: auth.currentUser.uid,
+      email: auth.currentUser.email,
+      displayName: auth.currentUser.displayName,
+      photoURL: auth.currentUser.photoURL,
+      createdAt: serverTimestamp(),
+    }, { merge: true });
+    setModalMessage('Google Sign-In successful!');
+    setAuthMode('app');
+  } catch (err) {
+    console.error("Google Sign-In error:", err);
+    setModalError(`Google Sign-In failed: ${err.message}`);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleLogout = async () => {
     setModalError('');
