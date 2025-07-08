@@ -23,6 +23,10 @@ import {
   updateDoc
 } from 'firebase/firestore';
 
+import { Routes, Route } from 'react-router-dom';
+import PublicViewer from './PublicViewer';
+
+
 // Firebase configuration for local development fallback
 // This will be used if __firebase_config is not provided by the Canvas environment.
 const localFirebaseConfig = {
@@ -281,8 +285,6 @@ const handleAuth = async (isSignUp) => {
     setIsLoading(false);
   }
 };
-
-import html2pdf from 'html2pdf.js';
 
 // Call this when user clicks Export
 const handleExportToPDF = (contentToExport, fileName = "ECC-Export") => {
@@ -612,6 +614,31 @@ Answer: William Shakespeare\n---QUIZ_END---`;
       setModalError('No content to copy.');
     }
   };
+
+// 🔗 Share current content by saving to Firestore publicContent/{id}
+const handleSharePublicLink = async () => {
+  if (!generatedContent || !currentContentId || !user) {
+    setModalError('Generate and save content before sharing.');
+    return;
+  }
+
+  try {
+    const publicDocRef = doc(db, `publicContent/${currentContentId}`);
+    await setDoc(publicDocRef, {
+      uid: user.uid,
+      name: currentContentName || 'Shared Educational Content',
+      generatedContent,
+      timestamp: new Date()
+    });
+
+    const publicURL = `${window.location.origin}/view/${currentContentId}`;
+    await navigator.clipboard.writeText(publicURL);
+    setModalMessage('✅ Public share link copied to clipboard!');
+  } catch (err) {
+    console.error('Error creating public share link:', err);
+    setModalError('❌ Failed to create shareable link.');
+  }
+};
 
   /**
    * Handles submitting user feedback to Firestore.
@@ -1026,6 +1053,14 @@ Answer: William Shakespeare\n---QUIZ_END---`;
               onChange={(e) => setGeneratedContent(e.target.value)} // Make it editable
               rows={10} // Adjust rows as needed
             ></textarea>
+            <div className="flex justify-end mt-4">
+  <button
+    onClick={() => handleExportToPDF(generatedContent, currentContentName || "ECC-Export")}
+    className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded-xl shadow-md transition"
+  >
+    Export as PDF
+  </button>
+</div>
             <button
               onClick={handleCopyToClipboard}
               className="mt-4 w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-white shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:-scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300 bg-blue-600 hover:bg-blue-700 flex items-center justify-center"
@@ -1038,6 +1073,15 @@ Answer: William Shakespeare\n---QUIZ_END---`;
             </button>
           </div>
         )}
+            <button
+  onClick={handleSharePublicLink}
+  className="mt-4 w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-white shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:-scale-105 focus:outline-none focus:ring-4 focus:ring-purple-300 bg-purple-600 hover:bg-purple-700 flex items-center justify-center"
+>
+  <svg className="-ml-1 mr-3 h-5 w-5 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <path d="M15 7h.01M6 12h.01M18 12h.01M9 17h.01M12 12h.01M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" />
+  </svg>
+  Share Public Link
+</button>
 
         {/* Feature 8: Interactive Quizzes (Pro Feature, Text-based only) */}
         {controlTier === 'pro' && quizzes.length > 0 && (
@@ -1163,16 +1207,3 @@ Answer: William Shakespeare\n---QUIZ_END---`;
 };
 
 export default App;
-
-// At the end of App.jsx
-import { Routes, Route } from 'react-router-dom';
-import PublicViewer from './PublicViewer';
-
-const RootApp = () => (
-  <Routes>
-    <Route path="/" element={<App />} />
-    <Route path="/view/:publicId" element={<PublicViewer />} />
-  </Routes>
-);
-
-export default RootApp;
