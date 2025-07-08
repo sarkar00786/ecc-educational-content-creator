@@ -282,6 +282,21 @@ const handleAuth = async (isSignUp) => {
   }
 };
 
+import html2pdf from 'html2pdf.js';
+
+// Call this when user clicks Export
+const handleExportToPDF = (contentToExport, fileName = "ECC-Export") => {
+  const element = document.createElement('div');
+  element.innerHTML = contentToExport;
+  html2pdf().from(element).set({
+    margin: 1,
+    filename: `${fileName}.pdf`,
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+  }).save();
+};
+
+
 // --- Google Auth ---
 const handleGoogleSignIn = async () => {
   setModalError('');
@@ -1148,3 +1163,16 @@ Answer: William Shakespeare\n---QUIZ_END---`;
 };
 
 export default App;
+
+// At the end of App.jsx
+import { Routes, Route } from 'react-router-dom';
+import PublicViewer from './PublicViewer';
+
+const RootApp = () => (
+  <Routes>
+    <Route path="/" element={<App />} />
+    <Route path="/view/:publicId" element={<PublicViewer />} />
+  </Routes>
+);
+
+export default RootApp;
