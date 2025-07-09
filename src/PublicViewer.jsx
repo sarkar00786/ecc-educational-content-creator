@@ -178,9 +178,25 @@ const PublicViewer = () => {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#f8fafc', color: '#000000' }}>
+    <div className="min-h-screen" style={{ 
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)',
+      color: '#000000',
+      position: 'relative'
+    }}>
+      {/* Decorative Elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -left-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse" style={{ animationDelay: '4s' }}></div>
+        <div className="absolute -bottom-40 -right-40 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse" style={{ animationDelay: '6s' }}></div>
+      </div>
+      
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10" style={{ backgroundColor: '#ffffff', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+      <header className="backdrop-blur-sm border-b sticky top-0 z-10" style={{ 
+        backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+        borderColor: 'rgba(255, 255, 255, 0.2)',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
+      }}>
         <div className="max-w-5xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -236,12 +252,19 @@ const PublicViewer = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-6 py-8">
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+      <main className="max-w-4xl mx-auto px-6 py-8 relative z-10">
+        <div className="backdrop-blur-lg rounded-3xl shadow-2xl border overflow-hidden" style={{
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          borderColor: 'rgba(255, 255, 255, 0.3)',
+          boxShadow: '0 25px 50px rgba(0, 0, 0, 0.1)'
+        }}>
           {/* Content Header */}
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 px-8 py-6 border-b border-gray-200">
-            <h2 className="text-2xl font-bold" style={{ color: '#1a202c' }}>📚 Educational Content</h2>
-            <p className="text-gray-600 mt-2">Generated with AI-powered educational content creator</p>
+          <div className="px-8 py-6 border-b" style={{
+            background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 50%, rgba(236, 72, 153, 0.1) 100%)',
+            borderColor: 'rgba(255, 255, 255, 0.2)'
+          }}>
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">📚 Educational Content</h2>
+            <p className="text-gray-700 mt-2 font-medium">Generated with AI-powered educational content creator</p>
           </div>
           
           {/* Content Body */}
@@ -253,11 +276,13 @@ const PublicViewer = () => {
                 fontSize: '17px',
                 lineHeight: '1.7',
                 fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-                backgroundColor: '#fafafa',
-                padding: '24px',
-                borderRadius: '12px',
-                border: '1px solid #e2e8f0',
-                minHeight: '400px'
+                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                padding: '32px',
+                borderRadius: '20px',
+                border: '2px solid rgba(255, 255, 255, 0.3)',
+                minHeight: '400px',
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
               }}
             >
               {contentData.generatedContent}
@@ -265,18 +290,21 @@ const PublicViewer = () => {
           </div>
           
           {/* Content Footer */}
-          <div className="bg-gray-50 px-8 py-6 border-t border-gray-200">
+          <div className="px-8 py-6 border-t" style={{
+            background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(168, 85, 247, 0.05) 50%, rgba(236, 72, 153, 0.05) 100%)',
+            borderColor: 'rgba(255, 255, 255, 0.2)'
+          }}>
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="text-sm text-gray-600">
-                  <span className="font-semibold">Word Count:</span> {contentData.generatedContent?.split(' ').length || 0} words
+              <div className="flex items-center space-x-6">
+                <div className="px-4 py-2 rounded-full" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}>
+                  <span className="text-sm font-semibold text-blue-700">📝 {contentData.generatedContent?.split(' ').length || 0} words</span>
                 </div>
-                <div className="text-sm text-gray-600">
-                  <span className="font-semibold">Characters:</span> {contentData.generatedContent?.length || 0}
+                <div className="px-4 py-2 rounded-full" style={{ backgroundColor: 'rgba(147, 51, 234, 0.1)' }}>
+                  <span className="text-sm font-semibold text-purple-700">🔤 {contentData.generatedContent?.length || 0} characters</span>
                 </div>
               </div>
-              <div className="text-sm text-gray-500">
-                ⚡ Powered by ECC App
+              <div className="px-4 py-2 rounded-full" style={{ backgroundColor: 'rgba(236, 72, 153, 0.1)' }}>
+                <span className="text-sm font-semibold text-pink-700">⚡ Powered by ECC App</span>
               </div>
             </div>
           </div>
@@ -284,20 +312,38 @@ const PublicViewer = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-12">
-        <div className="max-w-4xl mx-auto px-6 py-8 text-center">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">ECC</span>
+      <footer className="mt-12 relative z-10">
+        <div className="max-w-4xl mx-auto px-6 py-8">
+          <div className="backdrop-blur-lg rounded-2xl border text-center" style={{
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            borderColor: 'rgba(255, 255, 255, 0.3)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            padding: '32px'
+          }}>
+            <div className="flex items-center justify-center space-x-3 mb-6">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 via-purple-600 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-xl">ECC</span>
+              </div>
+              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">Educational Content Creator</span>
             </div>
-            <span className="text-xl font-bold text-gray-800">Educational Content Creator</span>
+            <p className="text-gray-700 text-lg mb-4 font-medium">
+              Create, share, and discover educational content with AI-powered assistance
+            </p>
+            <div className="flex items-center justify-center space-x-4 mb-4">
+              <div className="px-3 py-1 rounded-full bg-gradient-to-r from-blue-100 to-blue-200">
+                <span className="text-blue-700 text-xs font-semibold">🌐 Global Access</span>
+              </div>
+              <div className="px-3 py-1 rounded-full bg-gradient-to-r from-purple-100 to-purple-200">
+                <span className="text-purple-700 text-xs font-semibold">🤖 AI-Powered</span>
+              </div>
+              <div className="px-3 py-1 rounded-full bg-gradient-to-r from-pink-100 to-pink-200">
+                <span className="text-pink-700 text-xs font-semibold">🚀 Fast & Secure</span>
+              </div>
+            </div>
+            <p className="text-gray-500 text-sm">
+              © {new Date().getFullYear()} ECC App. All rights reserved.
+            </p>
           </div>
-          <p className="text-gray-600 text-sm mb-2">
-            Create, share, and discover educational content with AI-powered assistance
-          </p>
-          <p className="text-gray-500 text-xs">
-            © 2024 ECC App. All rights reserved.
-          </p>
         </div>
       </footer>
     </div>
