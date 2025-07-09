@@ -253,11 +253,10 @@ const PublicViewer = () => {
                 fontSize: '17px',
                 lineHeight: '1.7',
                 fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-                backgroundColor: '#ffffff',
+                backgroundColor: '#fafafa',
                 padding: '24px',
                 borderRadius: '12px',
                 border: '1px solid #e2e8f0',
-                backgroundColor: '#fafafa',
                 minHeight: '400px'
               }}
             >
