@@ -21,6 +21,9 @@ const firebaseConfig = {
   measurementId: "G-PW5ZCJKP9K"
 };
 
+// Get appId from config (same logic as in App.jsx)
+const appId = firebaseConfig.appId;
+
 const PublicViewer = () => {
   const { publicId } = useParams();
   const [contentData, setContentData] = useState(null);
@@ -34,7 +37,7 @@ const PublicViewer = () => {
           initializeApp(firebaseConfig);
         }
         const db = getFirestore();
-        const docRef = doc(db, `publicContent/${publicId}`);
+        const docRef = doc(db, `artifacts/${appId}/public/data/sharedContent/${publicId}`);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
