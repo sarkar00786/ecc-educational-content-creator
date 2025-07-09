@@ -4,15 +4,35 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 // Access the API key from Netlify Environment Variables
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-// Initialize the Google Generative AI client
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-
 exports.handler = async (event, context) => {
+  console.log('Function started - Method:', event.httpMethod);
+  
+  // Set timeout to prevent 502 errors
+  context.callbackWaitsForEmptyEventLoop = false;
+  
+  // Add CORS headers
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Content-Type': 'application/json'
+  };
+  
+  // Handle preflight OPTIONS request
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers: corsHeaders,
+      body: ''
+    };
+  }
+  
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
-      body: JSON.stringify({ message: 'Method Not Allowed' }),
+      headers: corsHeaders,
+      body: JSON.stringify({ error: 'Method Not Allowed' }),
     };
   }
 
@@ -21,52 +41,71 @@ exports.handler = async (event, context) => {
     console.error("GEMINI_API_KEY is not set in Netlify Environment Variables.");
     return {
       statusCode: 500,
+      headers: corsHeaders,
       body: JSON.stringify({ error: 'Server configuration error: API key missing.' }),
     };
   }
+  
+  // Initialize the Google Generative AI client here to avoid initialization errors
+  const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
   try {
     const body = JSON.parse(event.body || '{}');
     const chatHistory = body.contents || body.chatHistory || [];
 
+    console.log('Request body parsed, chatHistory length:', chatHistory.length);
+    
     // Validate chatHistory
     if (!Array.isArray(chatHistory) || chatHistory.length === 0 || !chatHistory[chatHistory.length - 1]?.parts?.[0]?.text) {
+      console.error('Invalid chat history:', chatHistory);
       return {
         statusCode: 400,
+        headers: corsHeaders,
         body: JSON.stringify({ error: 'Invalid or empty chat history provided.' }),
       };
     }
 
+    console.log('Getting model...');
     // Get the model
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
+    console.log('Starting chat session...');
     // Start a chat session
     const chat = model.startChat({
-      history: chatHistory,
+      history: chatHistory.slice(0, -1), // Don't include the last message in history
       generationConfig: {
         maxOutputTokens: 2000,
+        temperature: 0.7,
       },
     });
 
     // Send the last user message
     const lastUserMessage = chatHistory[chatHistory.length - 1].parts[0].text;
+    console.log('Sending message to Gemini API...');
+    
     const result = await chat.sendMessage(lastUserMessage);
     const response = await result.response;
     const text = response.text();
+    
+    console.log('Success - Generated content length:', text.length);
 
     return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: corsHeaders,
       body: JSON.stringify({ generatedContent: text }),
     };
 
   } catch (error) {
     console.error('Error in Netlify Function:', error);
+    console.error('Error stack:', error.stack);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Failed to generate content', details: error.message }),
+      headers: corsHeaders,
+      body: JSON.stringify({ 
+        error: 'Failed to generate content', 
+        details: error.message,
+        type: error.constructor.name 
+      }),
     };
   }
 };
