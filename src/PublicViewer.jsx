@@ -100,19 +100,19 @@ const PublicViewer = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white" style={{ backgroundColor: '#ffffff', color: '#000000' }}>
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-10" style={{ backgroundColor: '#ffffff' }}>
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">ECC</span>
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-gray-800 truncate max-w-md">
+              <h1 className="text-lg font-semibold truncate max-w-md" style={{ color: '#000000' }}>
                 {contentData.name || 'Shared Educational Content'}
               </h1>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs" style={{ color: '#666666' }}>
                 Shared on {contentData.timestamp?.toDate().toLocaleDateString() || 'N/A'}
               </p>
             </div>
@@ -145,16 +145,20 @@ const PublicViewer = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-white">
+      <main className="max-w-4xl mx-auto px-4 py-8" style={{ backgroundColor: '#ffffff' }}>
+        <div className="bg-white" style={{ backgroundColor: '#ffffff' }}>
           {/* Content Display */}
-          <div className="prose prose-lg max-w-none">
+          <div className="max-w-none">
             <div 
-              className="text-black leading-relaxed whitespace-pre-wrap"
+              className="whitespace-pre-wrap"
               style={{
+                color: '#000000',
                 fontSize: '16px',
                 lineHeight: '1.6',
-                fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+                fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                backgroundColor: '#ffffff',
+                padding: '20px',
+                borderRadius: '8px'
               }}
             >
               {contentData.generatedContent}
