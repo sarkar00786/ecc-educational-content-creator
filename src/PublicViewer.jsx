@@ -10,6 +10,37 @@ import {
   getApps
 } from 'firebase/app';
 
+// Icons (inline SVG components)
+const CopyIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M5 13l4 4L19 7" />
+  </svg>
+);
+
+const FileTextIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+    <path d="M14 2v6h6" />
+    <path d="M16 13H8" />
+    <path d="M16 17H8" />
+    <path d="M10 9H8" />
+  </svg>
+);
+
+const ShareIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" />
+    <path d="M16 6l-4-4-4 4" />
+    <path d="M12 2v13" />
+  </svg>
+);
+
 // ✅ Use same config as in your App.jsx (inlined here for independence)
 const firebaseConfig = {
   apiKey: "AIzaSyC0Mx48gIXYN81RT3S_Dixr2w2nsqleEzU",
@@ -30,6 +61,7 @@ const PublicViewer = () => {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   useEffect(() => {
     const loadPublicContent = async () => {
@@ -70,6 +102,52 @@ const PublicViewer = () => {
     }
   };
 
+  const handleCopyLink = () => {
+    const currentUrl = window.location.href;
+    const textarea = document.createElement('textarea');
+    textarea.value = currentUrl;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  };
+
+  const handleExportToPDF = () => {
+    if (typeof html2pdf !== 'undefined' && contentData?.generatedContent) {
+      const htmlContent = `
+        <html>
+          <head>
+            <style>
+              body {
+                font-family: system-ui, -apple-system, sans-serif;
+                color: #000000;
+                background-color: #ffffff;
+                padding: 20px;
+                line-height: 1.6;
+              }
+              h1 { color: #000000; margin-bottom: 20px; }
+            </style>
+          </head>
+          <body>
+            <h1>${contentData.name || 'Shared Educational Content'}</h1>
+            ${contentData.generatedContent.replace(/\n/g, '<br />')}
+          </body>
+        </html>
+      `;
+
+      html2pdf().from(htmlContent).set({
+        margin: 1,
+        filename: `${contentData.name || 'ECC-Content'}.pdf`,
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+      }).save();
+    } else {
+      alert('PDF export is not available. Please try copying the content instead.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -100,81 +178,126 @@ const PublicViewer = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white" style={{ backgroundColor: '#ffffff', color: '#000000' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#f8fafc', color: '#000000' }}>
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10" style={{ backgroundColor: '#ffffff' }}>
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">ECC</span>
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-10" style={{ backgroundColor: '#ffffff', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+        <div className="max-w-5xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-lg">ECC</span>
+              </div>
+              <div>
+                <h1 className="text-xl font-bold truncate max-w-md" style={{ color: '#1a202c' }}>
+                  {contentData.name || 'Shared Educational Content'}
+                </h1>
+                <p className="text-sm" style={{ color: '#718096' }}>
+                  📅 Shared on {contentData.timestamp?.toDate().toLocaleDateString() || 'N/A'}
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-lg font-semibold truncate max-w-md" style={{ color: '#000000' }}>
-                {contentData.name || 'Shared Educational Content'}
-              </h1>
-              <p className="text-xs" style={{ color: '#666666' }}>
-                Shared on {contentData.timestamp?.toDate().toLocaleDateString() || 'N/A'}
-              </p>
+            
+            {/* Action Buttons */}
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={handleCopyContent}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 ${
+                  copied 
+                    ? 'bg-green-500 text-white' 
+                    : 'bg-blue-500 hover:bg-blue-600 text-white'
+                }`}
+              >
+                {copied ? <CheckIcon /> : <CopyIcon />}
+                <span className="text-sm">{copied ? 'Copied!' : 'Copy Content'}</span>
+              </button>
+              
+              <button
+                onClick={handleCopyLink}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 ${
+                  linkCopied 
+                    ? 'bg-green-500 text-white' 
+                    : 'bg-purple-500 hover:bg-purple-600 text-white'
+                }`}
+              >
+                {linkCopied ? <CheckIcon /> : <ShareIcon />}
+                <span className="text-sm">{linkCopied ? 'Link Copied!' : 'Share Link'}</span>
+              </button>
+              
+              <button
+                onClick={handleExportToPDF}
+                className="flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 bg-emerald-500 hover:bg-emerald-600 text-white"
+              >
+                <FileTextIcon />
+                <span className="text-sm">Export PDF</span>
+              </button>
             </div>
           </div>
-          <button
-            onClick={handleCopyContent}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
-              copied 
-                ? 'bg-green-500 text-white' 
-                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-            }`}
-          >
-            {copied ? (
-              <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="text-sm font-medium">Copied!</span>
-              </>
-            ) : (
-              <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                <span className="text-sm font-medium">Copy Content</span>
-              </>
-            )}
-          </button>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 py-8" style={{ backgroundColor: '#ffffff' }}>
-        <div className="bg-white" style={{ backgroundColor: '#ffffff' }}>
-          {/* Content Display */}
-          <div className="max-w-none">
+      <main className="max-w-4xl mx-auto px-6 py-8">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+          {/* Content Header */}
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 px-8 py-6 border-b border-gray-200">
+            <h2 className="text-2xl font-bold" style={{ color: '#1a202c' }}>📚 Educational Content</h2>
+            <p className="text-gray-600 mt-2">Generated with AI-powered educational content creator</p>
+          </div>
+          
+          {/* Content Body */}
+          <div className="px-8 py-8">
             <div 
               className="whitespace-pre-wrap"
               style={{
                 color: '#000000',
-                fontSize: '16px',
-                lineHeight: '1.6',
+                fontSize: '17px',
+                lineHeight: '1.7',
                 fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
                 backgroundColor: '#ffffff',
-                padding: '20px',
-                borderRadius: '8px'
+                padding: '24px',
+                borderRadius: '12px',
+                border: '1px solid #e2e8f0',
+                backgroundColor: '#fafafa',
+                minHeight: '400px'
               }}
             >
               {contentData.generatedContent}
+            </div>
+          </div>
+          
+          {/* Content Footer */}
+          <div className="bg-gray-50 px-8 py-6 border-t border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="text-sm text-gray-600">
+                  <span className="font-semibold">Word Count:</span> {contentData.generatedContent?.split(' ').length || 0} words
+                </div>
+                <div className="text-sm text-gray-600">
+                  <span className="font-semibold">Characters:</span> {contentData.generatedContent?.length || 0}
+                </div>
+              </div>
+              <div className="text-sm text-gray-500">
+                ⚡ Powered by ECC App
+              </div>
             </div>
           </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-50 border-t border-gray-200 mt-12">
-        <div className="max-w-4xl mx-auto px-4 py-6 text-center">
+      <footer className="bg-white border-t border-gray-200 mt-12">
+        <div className="max-w-4xl mx-auto px-6 py-8 text-center">
+          <div className="flex items-center justify-center space-x-2 mb-4">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">ECC</span>
+            </div>
+            <span className="text-xl font-bold text-gray-800">Educational Content Creator</span>
+          </div>
           <p className="text-gray-600 text-sm mb-2">
-            This content was created using <span className="font-semibold text-blue-600">ECC App</span>
+            Create, share, and discover educational content with AI-powered assistance
           </p>
           <p className="text-gray-500 text-xs">
-            Educational Content Creator - Powered by AI
+            © 2024 ECC App. All rights reserved.
           </p>
         </div>
       </footer>
