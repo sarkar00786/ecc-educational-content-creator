@@ -69,21 +69,22 @@ exports.handler = async (event, context) => {
     // Get the model
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    console.log('Starting chat session...');
-    // Start a chat session
-    const chat = model.startChat({
-      history: chatHistory.slice(0, -1), // Don't include the last message in history
-      generationConfig: {
-        maxOutputTokens: 2000,
-        temperature: 0.7,
-      },
-    });
-
-    // Send the last user message
-    const lastUserMessage = chatHistory[chatHistory.length - 1].parts[0].text;
-    console.log('Sending message to Gemini API...');
+    console.log('Generating content directly...');
     
-    const result = await chat.sendMessage(lastUserMessage);
+    // Use generateContent instead of chat for simpler approach
+    const lastUserMessage = chatHistory[chatHistory.length - 1].parts[0].text;
+    console.log('Sending message to Gemini API with message length:', lastUserMessage.length);
+    
+    // Add timeout to prevent 502 errors
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Request timeout')), 25000); // 25 second timeout
+    });
+    
+    const result = await Promise.race([
+      model.generateContent(lastUserMessage),
+      timeoutPromise
+    ]);
+    
     const response = await result.response;
     const text = response.text();
     
