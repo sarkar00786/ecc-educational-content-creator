@@ -1045,6 +1045,17 @@ const ModernContentHistory = ({
             color={isDark ? "gray.100" : "gray.900"}
             border="2px solid"
             borderColor={isDark ? "gray.600" : "gray.200"}
+            sx={{
+              '& option': {
+                backgroundColor: isDark ? 'gray.600' : 'white',
+                color: isDark ? 'gray.100' : 'gray.900',
+                padding: '8px 12px',
+                '&:hover': {
+                  backgroundColor: isDark ? 'gray.500' : 'blue.50',
+                  color: isDark ? 'white' : 'blue.900'
+                }
+              }
+            }}
           >
             <option value="all">All Tiers</option>
             <option value="basic">Basic</option>
@@ -1060,6 +1071,17 @@ const ModernContentHistory = ({
             color={isDark ? "gray.100" : "gray.900"}
             border="2px solid"
             borderColor={isDark ? "gray.600" : "gray.200"}
+            sx={{
+              '& option': {
+                backgroundColor: isDark ? 'gray.600' : 'white',
+                color: isDark ? 'gray.100' : 'gray.900',
+                padding: '8px 12px',
+                '&:hover': {
+                  backgroundColor: isDark ? 'gray.500' : 'blue.50',
+                  color: isDark ? 'white' : 'blue.900'
+                }
+              }
+            }}
           >
             <option value="newest">Newest</option>
             <option value="oldest">Oldest</option>
