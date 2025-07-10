@@ -21,7 +21,8 @@ import {
   serverTimestamp,
   onSnapshot,
   updateDoc,
-  getDocs
+  getDocs,
+  deleteDoc
 } from 'firebase/firestore';
 
 import { Routes, Route } from 'react-router-dom';
@@ -30,6 +31,7 @@ import Layout from './components/Layout'; // Import the new Layout component
 import ModernHeader from './components/ModernHeader';
 import ModernContentGenerator from './components/ModernContentGenerator';
 import ModernContentHistory from './components/ModernContentHistory';
+import { GenerationProgressProvider, useGenerationProgress } from './contexts/GenerationProgressContext';
 
 // Chakra UI Components
 import {
@@ -219,9 +221,47 @@ const Notification = ({ message, status, onClose }) => {
   );
 };
 
-// Main App component for the educational content generator
-const App = () => {
+// AppContent component that uses the generation progress context
+const AppContent = () => {
+  const { progress: generationProgress, stage, start, advance, finish, reset } = useGenerationProgress();
   const [notifications, setNotifications] = useState([]);
+  
+  // Theme state to match header
+  const [isDark, setIsDark] = useState(() => {
+    const saved = localStorage.getItem('ecc-theme');
+    if (saved) return saved === 'dark';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+  
+  // Listen for theme changes
+  React.useEffect(() => {
+    const handleStorageChange = () => {
+      const saved = localStorage.getItem('ecc-theme');
+      if (saved) {
+        setIsDark(saved === 'dark');
+      } else {
+        setIsDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for direct theme changes from settings
+    const observer = new MutationObserver(() => {
+      const className = document.documentElement.className;
+      setIsDark(className === 'dark');
+    });
+    
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      observer.disconnect();
+    };
+  }, []);
 
   const toast = useCallback((config) => {
     const id = Date.now();
@@ -260,9 +300,6 @@ const App = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [feedbackText, setFeedbackText] = useState('');
   
-  // --- Dynamic Progress Animation ---
-  const [generationProgress, setGenerationProgress] = useState(0);
-
   // --- Content Naming & Renaming ---
   const [currentContentId, setCurrentContentId] = useState(null);
   const [currentContentName, setCurrentContentName] = useState('');
@@ -272,40 +309,6 @@ const App = () => {
   const [quizzes, setQuizzes] = useState([]);
   const [quizAnswers, setQuizAnswers] = useState({});
   const [quizFeedback, setQuizFeedback] = useState({});
-
-  // --- Progress Animation Effect ---
-  useEffect(() => {
-    let progressInterval;
-    
-    if (isLoading) {
-      // Reset progress to 0 when starting
-      setGenerationProgress(0);
-      
-      // Start progressive animation
-      progressInterval = setInterval(() => {
-        setGenerationProgress(prev => {
-          if (prev >= 95) {
-            // Stop at 95% and wait for actual completion
-            return prev;
-          }
-          // Random increment between 2-10%
-          const increment = Math.random() * 8 + 2;
-          return Math.min(prev + increment, 95);
-        });
-      }, 400); // Update every 400ms
-    } else {
-      // Complete to 100% when loading finishes
-      if (generationProgress > 0) {
-        setGenerationProgress(100);
-        // Reset after a brief delay
-        setTimeout(() => setGenerationProgress(0), 1000);
-      }
-    }
-    
-    return () => {
-      if (progressInterval) clearInterval(progressInterval);
-    };
-  }, [isLoading, generationProgress]);
 
   // --- Firebase Auth Init ---
   useEffect(() => {
@@ -382,7 +385,9 @@ toast({
     const q = query(collection(db, path));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const history = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const history = snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter(item => !item.deleted); // Filter out deleted items
       // Sort client-side to avoid Firestore index issues
       history.sort((a, b) => (b.timestamp?.toDate() || 0) - (a.timestamp?.toDate() || 0));
       setContentHistory(history);
@@ -834,7 +839,11 @@ toast({
     }
 
     setIsLoading(true);
+    
     try {
+      // Step 1: Start progress and prepare for first API call (0-70%)
+      start('prep');
+      
       // --- Step 1: Core Concept Extraction and Audience-Specific Simplification ---
       let step1Prompt = `Given the following 'Book Content', identify the core concepts and simplify them for an audience at the "${audienceClass}" level, aged "${audienceAge}", and from the "${audienceRegion}" region. Focus on making the foundational ideas understandable without losing accuracy. Present these simplified core concepts clearly.`;
 
@@ -849,8 +858,12 @@ toast({
       }
       step1Prompt += `\n\nBook Content:\n${bookContent}\n\nSimplified Core Concepts:`;
 
+      // First API call
       const simplifiedConcepts = await callGeminiAPI([{ role: "user", parts: [{ text: step1Prompt }] }]);
       console.log('Step 1 (Simplified Concepts):', simplifiedConcepts);
+
+      // Step 2: After first API call returns, advance to processing stage (70-85%)
+      advance('processing');
 
       // --- Step 2: Pedagogical Transformation and Content Generation + Quiz Prompt ---
       let step2Prompt = `You are an expert educator with deep pedagogical knowledge. Your task is to transform the following 'Simplified Core Concepts' into highly engaging and exceptionally effective educational material. Tailor this content specifically for the audience:
@@ -875,8 +888,12 @@ Simplified Core Concepts to Transform:\n${simplifiedConcepts}\n\nPlease generate
 Answer: William Shakespeare\n---QUIZ_END---`;
       }
 
+      // Second API call
       const finalGeneratedContentRaw = await callGeminiAPI([{ role: "user", parts: [{ text: step2Prompt }] }]);
 
+      // Step 3: After second API call returns, advance to handling stage (85-90%)
+      advance('handling');
+      
       // Parse quizzes if in Pro tier
       let extractedQuizzes = [];
       let cleanedContent = finalGeneratedContentRaw;
@@ -909,6 +926,10 @@ Answer: William Shakespeare\n---QUIZ_END---`;
       });
       setCurrentContentId(newDocRef.id); // Set the ID of the newly created document
       setCurrentContentName(defaultContentName); // Set the name for the current content
+      
+      // Step 4: After Firestore write succeeds, finish progress (90-100% + auto-reset)
+      finish();
+      
       toast({
         title: "Content generated and saved successfully!",
         status: "success",
@@ -917,13 +938,6 @@ Answer: William Shakespeare\n---QUIZ_END---`;
       });
 
     } catch (err) {
-toast({
-  title: "Content Generation Error",
-  description: err.message,
-  status: "error",
-  duration: 5000,
-  isClosable: true,
-});
       toast({
         title: "Content Generation Failed",
         description: `${err.message}. Please ensure you are logged in and have sufficient usage limits.`,
@@ -932,6 +946,8 @@ toast({
         isClosable: true,
       });
     } finally {
+      // Always call finish() in the finally block to ensure progress bar completes and resets
+      finish();
       setIsLoading(false);
     }
   };
@@ -1016,6 +1032,59 @@ toast({
     }
   };
 
+  /**
+   * Handles deleting a content item from Firestore.
+   * (Content Management)
+   */
+  const handleDeleteHistoryItem = useCallback(async (contentId) => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to delete content.",
+        status: "warning",
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const contentDocRef = doc(db, `artifacts/${appId}/users/${user.uid}/generatedContent`, contentId);
+      await updateDoc(contentDocRef, {
+        deleted: true,
+        deletedAt: serverTimestamp()
+      });
+      
+      // If the deleted item is currently loaded, clear it
+      if (currentContentId === contentId) {
+        setGeneratedContent('');
+        setCurrentContentId(null);
+        setCurrentContentName('');
+        setQuizzes([]);
+        setQuizAnswers({});
+        setQuizFeedback({});
+      }
+      
+      toast({
+        title: "Content deleted successfully!",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (err) {
+      console.error('Error deleting content:', err);
+      toast({
+        title: "Delete Failed",
+        description: 'Failed to delete content: ' + err.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, toast, currentContentId]);
 
   /**
    * Handles copying the generated content to the clipboard.
@@ -1245,14 +1314,14 @@ toast({
         <Card
           w="full"
           maxW="md"
-          bg="gray.800"
-          color="white"
+          bg={isDark ? "gray.800" : "white"}
+          color={isDark ? "white" : "gray.900"}
           shadow="2xl"
           borderRadius="2xl"
           p={8}
           textAlign="center"
           border="1px"
-          borderColor="gray.700"
+          borderColor={isDark ? "gray.700" : "gray.200"}
         >
           <CardHeader>
             <Heading as="h2" size="xl" fontWeight="extrabold" color="blue.400" mb={4}>
@@ -1279,7 +1348,10 @@ toast({
     return (
       <Flex
         minH="100vh"
-        bgGradient="linear(to-br, gray.900, gray.800)"
+        bgGradient={isDark 
+          ? "linear(to-br, gray.900, gray.800)"
+          : "linear(to-br, blue.50, purple.50)"
+        }
         align="center"
         justify="center"
         p={4}
@@ -1291,25 +1363,33 @@ toast({
           transition={{ duration: 0.5 }}
           style={{ width: '100%', maxWidth: 'md' }}
         >
-          <Card bg="gray.800" color="white" shadow="2xl" borderRadius="2xl" p={6} border="1px" borderColor="gray.700">
+          <Card 
+            bg={isDark ? "gray.800" : "white"} 
+            color={isDark ? "white" : "gray.900"} 
+            shadow="2xl" 
+            borderRadius="2xl" 
+            p={6} 
+            border="1px" 
+            borderColor={isDark ? "gray.700" : "gray.200"}
+          >
             <CardHeader textAlign="center" pb={6}>
               <Heading as="h2" size="xl" fontWeight="extrabold" color="blue.400">
                 {authMode === 'login' ? 'Login to ECC App' : 'Sign Up for ECC App'}
               </Heading>
-              <Text mt={2} color="gray.300">
+              <Text mt={2} color={isDark ? "gray.300" : "gray.600"}>
                 {authMode === 'login' ? 'Log in to continue or sign up for a new account.' : 'Create your account to get started.'}
               </Text>
             </CardHeader>
             <CardBody>
               <Stack spacing={4}>
                 <FormControl>
-                  <FormLabel htmlFor="email" color="gray.200">Email:</FormLabel>
+                  <FormLabel htmlFor="email" color={isDark ? "gray.200" : "gray.700"}>Email:</FormLabel>
                   <Input
                     type="email"
                     id="email"
-                    bg="gray.700"
-                    borderColor="gray.600"
-                    color="white"
+                    bg={isDark ? "gray.700" : "white"}
+                    borderColor={isDark ? "gray.600" : "gray.300"}
+                    color={isDark ? "white" : "gray.800"}
                     _placeholder={{ color: 'gray.400' }}
                     focusBorderColor="blue.500"
                     placeholder="your@example.com"
@@ -1319,13 +1399,13 @@ toast({
                   />
                 </FormControl>
                 <FormControl>
-                  <FormLabel htmlFor="password" color="gray.200">Password:</FormLabel>
+                  <FormLabel htmlFor="password" color={isDark ? "gray.200" : "gray.700"}>Password:</FormLabel>
                   <Input
                     type="password"
                     id="password"
-                    bg="gray.700"
-                    borderColor="gray.600"
-                    color="white"
+                    bg={isDark ? "gray.700" : "white"}
+                    borderColor={isDark ? "gray.600" : "gray.300"}
+                    color={isDark ? "white" : "gray.800"}
                     _placeholder={{ color: 'gray.400' }}
                     focusBorderColor="blue.500"
                     placeholder="********"
@@ -1395,8 +1475,12 @@ toast({
   return (
     <Box 
       minH="100vh" 
-      bg="linear-gradient(135deg, #667eea 0%, #764ba2 20%, #f093fb 50%, #f5f7fa 100%)"
+      bg={isDark 
+        ? "linear-gradient(135deg, hsl(217, 35%, 15%) 0%, hsl(262, 40%, 20%) 25%, hsl(199, 45%, 25%) 50%, hsl(142, 30%, 18%) 75%, hsl(38, 40%, 22%) 100%)"
+        : "linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(262, 83%, 58%) 25%, hsl(199, 89%, 48%) 50%, hsl(142, 76%, 36%) 75%, hsl(38, 92%, 50%) 100%)"
+      }
       position="relative"
+      transition="all 0.3s ease"
       _before={{
         content: '""',
         position: 'absolute',
@@ -1404,8 +1488,12 @@ toast({
         left: 0,
         right: 0,
         bottom: 0,
-        bg: 'rgba(255, 255, 255, 0.9)',
-        zIndex: 0
+        bg: isDark 
+          ? 'rgba(17, 24, 39, 0.85)'
+          : 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(1px)',
+        zIndex: 0,
+        transition: 'all 0.3s ease'
       }}
     >
       {/* Modern Header */}
@@ -1414,8 +1502,7 @@ toast({
           user={user}
           onLogout={handleLogout}
           contentHistory={contentHistory}
-          isGenerating={isLoading}
-          generationProgress={generationProgress}
+          progress={{ stage, value: generationProgress }}
           onProfileClick={handleProfileSettings}
           onPreferencesClick={handlePreferences}
         />
@@ -1463,9 +1550,14 @@ toast({
                 <ModernContentHistory
                   contentHistory={contentHistory}
                   onLoadHistoryItem={handleLoadHistoryItem}
+                  onDeleteHistoryItem={handleDeleteHistoryItem}
                   searchTerm={searchTerm}
                   setSearchTerm={setSearchTerm}
                   isLoading={false}
+                  db={db}
+                  auth={auth}
+                  appId={appId}
+                  user={user}
                 />
               </GridItem>
             </Grid>
@@ -1476,9 +1568,18 @@ toast({
                 transition={{ duration: 0.5, delay: 0.1 }}
                 style={{ marginTop: '2rem' }}
               >
-                <Card bg="white" shadow="xl" rounded="2xl" p={6} border="1px solid" borderColor="gray.200">
+                <Card 
+                  bg={isDark ? "gray.800" : "white"} 
+                  shadow="xl" 
+                  rounded="2xl" 
+                  p={6} 
+                  border="1px solid" 
+                  borderColor={isDark ? "gray.700" : "gray.200"}
+                  color={isDark ? "gray.100" : "gray.900"}
+                  backdropFilter="blur(10px)"
+                >
                   <CardHeader display="flex" justifyContent="space-between" alignItems="center" p={0} mb={4}>
-                    <Heading as="h3" size="md" color="gray.800" display="flex" alignItems="center">
+                    <Heading as="h3" size="md" color={isDark ? "gray.100" : "gray.800"} display="flex" alignItems="center">
                       <FileText size={20} style={{ marginRight: '0.5rem', color: 'var(--chakra-colors-blue-500)' }} />
                       {isRenaming ? (
                         <InputGroup>
@@ -1489,9 +1590,9 @@ toast({
                             onBlur={handleRenameContent}
                             onKeyPress={(e) => { if (e.key === 'Enter') handleRenameContent(); }}
                             p={1}
-                            bg="white"
-                            borderColor="gray.300"
-                            color="gray.800"
+                            bg={isDark ? "gray.700" : "white"}
+                            borderColor={isDark ? "gray.600" : "gray.300"}
+                            color={isDark ? "gray.100" : "gray.800"}
                             focusBorderColor="blue.500"
                             autoFocus
                             rounded="md"
@@ -1516,10 +1617,10 @@ toast({
                   </CardHeader>
                   <CardBody p={0}>
                     <Textarea
-                      bg="gray.50"
-                      borderColor="gray.300"
-                      color="gray.800"
-                      _placeholder={{ color: 'gray.400' }}
+                      bg={isDark ? "gray.700" : "gray.50"}
+                      borderColor={isDark ? "gray.600" : "gray.300"}
+                      color={isDark ? "gray.100" : "gray.800"}
+                      _placeholder={{ color: isDark ? "gray.400" : "gray.400" }}
                       focusBorderColor="blue.500"
                       h="256px"
                       resize="vertical"
@@ -1568,21 +1669,36 @@ toast({
                 transition={{ duration: 0.5, delay: 0.2 }}
                 style={{ marginTop: '2rem' }}
               >
-                <Card bg="orange.50" borderColor="orange.200" shadow="lg" p={6} borderRadius="xl">
+                <Card 
+                  bg={isDark ? "orange.900" : "orange.50"} 
+                  borderColor={isDark ? "orange.700" : "orange.200"} 
+                  shadow="lg" 
+                  p={6} 
+                  borderRadius="xl"
+                  color={isDark ? "gray.100" : "gray.900"}
+                >
                   <CardHeader p={0} mb={4}>
-                    <Heading as="h3" size="md" color="orange.800">Interactive Quiz (Pro Feature):</Heading>
+                    <Heading as="h3" size="md" color={isDark ? "orange.200" : "orange.800"}>Interactive Quiz (Pro Feature):</Heading>
                   </CardHeader>
                   <CardBody p={0}>
                     <Stack spacing={6}>
                       {quizzes.map((q, qIndex) => (
-                        <Box key={q.id} p={4} bg="white" rounded="lg" shadow="sm" border="1px" borderColor="orange.200">
-                          <Text fontWeight="semibold" color="gray.800" mb={3}>Question {qIndex + 1}: {q.question}</Text>
+                        <Box 
+                          key={q.id} 
+                          p={4} 
+                          bg={isDark ? "gray.800" : "white"} 
+                          rounded="lg" 
+                          shadow="sm" 
+                          border="1px" 
+                          borderColor={isDark ? "orange.600" : "orange.200"}
+                        >
+                          <Text fontWeight="semibold" color={isDark ? "gray.100" : "gray.800"} mb={3}>Question {qIndex + 1}: {q.question}</Text>
                           <InputGroup>
                             <Input
                               type="text"
-                              bg="gray.50"
-                              borderColor="gray.300"
-                              color="gray.800"
+                              bg={isDark ? "gray.700" : "gray.50"}
+                              borderColor={isDark ? "gray.600" : "gray.300"}
+                              color={isDark ? "gray.100" : "gray.800"}
                               _placeholder={{ color: 'gray.400' }}
                               focusBorderColor="orange.500"
                               placeholder="Your answer"
@@ -1618,15 +1734,23 @@ toast({
               transition={{ duration: 0.5, delay: 0.3 }}
               style={{ marginTop: '2rem' }}
             >
-              <Card bg="white" shadow="lg" p={6} borderRadius="xl" border="1px solid" borderColor="gray.200">
+              <Card 
+                bg={isDark ? "gray.800" : "white"} 
+                shadow="lg" 
+                p={6} 
+                borderRadius="xl" 
+                border="1px solid" 
+                borderColor={isDark ? "gray.700" : "gray.200"}
+                color={isDark ? "gray.100" : "gray.900"}
+              >
                 <CardHeader p={0} mb={4}>
-                  <Heading as="h3" size="md" color="gray.800">Give Us Feedback:</Heading>
+                  <Heading as="h3" size="md" color={isDark ? "gray.100" : "gray.800"}>Give Us Feedback:</Heading>
                 </CardHeader>
                 <CardBody p={0}>
                   <Textarea
-                    bg="gray.50"
-                    borderColor="gray.300"
-                    color="gray.800"
+                    bg={isDark ? "gray.700" : "gray.50"}
+                    borderColor={isDark ? "gray.600" : "gray.300"}
+                    color={isDark ? "gray.100" : "gray.800"}
                     _placeholder={{ color: 'gray.400' }}
                     focusBorderColor="blue.500"
                     h="112px"
@@ -1663,15 +1787,23 @@ toast({
               transition={{ duration: 0.5, delay: 0.4 }}
               style={{ marginTop: '2rem' }}
             >
-              <Card bg="white" shadow="lg" p={6} borderRadius="xl" border="1px solid" borderColor="gray.200">
+              <Card 
+                bg={isDark ? "gray.800" : "white"} 
+                shadow="lg" 
+                p={6} 
+                borderRadius="xl" 
+                border="1px solid" 
+                borderColor={isDark ? "gray.700" : "gray.200"}
+                color={isDark ? "gray.100" : "gray.900"}
+              >
                 <CardHeader p={0} mb={4} textAlign="center">
-                  <Heading as="h3" size="md" color="gray.800" display="flex" alignItems="center" justifyContent="center">
+                  <Heading as="h3" size="md" color={isDark ? "gray.100" : "gray.800"} display="flex" alignItems="center" justifyContent="center">
                     <HelpCircle size={20} style={{ marginRight: '0.5rem' }} />
                     Need Help?
                   </Heading>
                 </CardHeader>
                 <CardBody p={0} textAlign="center">
-                  <Text color="gray.600" mb={4}>
+                  <Text color={isDark ? "gray.300" : "gray.600"} mb={4}>
                     For support, please contact us at{' '}
                     <Link href="mailto:azkabloch786@gmail.com" color="blue.500" _hover={{ textDecoration: 'underline' }} display="inline-flex" alignItems="center">
                       <Mail size={16} style={{ marginRight: '0.5rem' }} /> azkabloch786@gmail.com
@@ -1689,6 +1821,15 @@ toast({
         <Route path="/view/:id" element={<PublicViewer />} />
       </Routes>
     </Box>
+  );
+};
+
+// Main App component that provides the generation progress context
+const App = () => {
+  return (
+    <GenerationProgressProvider>
+      <AppContent />
+    </GenerationProgressProvider>
   );
 };
 

@@ -179,8 +179,8 @@ const PublicViewer = () => {
 
   return (
     <div className="min-h-screen" style={{ 
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)',
-      color: '#000000',
+      background: 'linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(262, 83%, 58%) 25%, hsl(199, 89%, 48%) 50%, hsl(142, 76%, 36%) 75%, hsl(38, 92%, 50%) 100%)',
+      color: '#1a202c',
       position: 'relative'
     }}>
       {/* Decorative Elements */}

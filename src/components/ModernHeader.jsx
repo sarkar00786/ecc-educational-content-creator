@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import SettingsPanel from './SettingsPanel';
 import {
   Box,
   Flex,
@@ -17,7 +18,8 @@ import {
   PopoverContent,
   PopoverBody,
   PopoverArrow,
-  Divider
+  Divider,
+  Portal
 } from '@chakra-ui/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -29,25 +31,50 @@ import {
   Sparkles,
   Zap,
   Brain,
-  Activity
+  Activity,
+  CheckCircle,
+  Loader2,
+  Sun,
+  Moon,
+  Palette,
+  Monitor
 } from 'lucide-react';
 
 const ModernHeader = ({ 
   user, 
   onLogout, 
   contentHistory, 
-  isGenerating = false,
-  generationProgress = 0,
+  progress = { stage: 'idle', value: 0 },
   onProfileClick,
   onPreferencesClick 
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isDark, setIsDark] = useState(() => {
+    const saved = localStorage.getItem('ecc-theme');
+    if (saved) return saved === 'dark';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  const toggleTheme = () => {
+    const newTheme = !isDark;
+    setIsDark(newTheme);
+    localStorage.setItem('ecc-theme', newTheme ? 'dark' : 'light');
+    document.documentElement.className = newTheme ? 'dark' : 'light';
+  };
 
   const glassEffect = {
     backdropFilter: 'blur(20px)',
-    background: 'rgba(255, 255, 255, 0.1)',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
-    boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+    background: isDark 
+      ? 'rgba(17, 24, 39, 0.95)' 
+      : 'rgba(255, 255, 255, 0.95)',
+    border: `1px solid ${isDark 
+      ? 'rgba(59, 130, 246, 0.2)' 
+      : 'rgba(59, 130, 246, 0.1)'}`,
+    boxShadow: isDark
+      ? '0 8px 32px 0 rgba(0, 0, 0, 0.3), 0 2px 16px 0 rgba(59, 130, 246, 0.1)'
+      : '0 8px 32px 0 rgba(59, 130, 246, 0.1), 0 2px 16px 0 rgba(139, 92, 246, 0.08)',
+    color: isDark ? '#f3f4f6' : '#111827',
   };
 
   const handleNotificationClick = () => {
@@ -67,9 +94,73 @@ const ModernHeader = ({
     if (onPreferencesClick) {
       onPreferencesClick();
     } else {
-      alert('⚙️ Preferences: Feature coming soon!');
+      setIsSettingsOpen(true);
     }
   };
+
+  const handleLogout = () => {
+    if (onLogout) {
+      onLogout();
+    } else {
+      alert('Logout functionality is not implemented yet.');
+    }
+  };
+
+  // Helper function to get stage text
+  const getStageText = (stage) => {
+    switch (stage) {
+      case 'prep':
+        return 'Preparing…';
+      case 'processing':
+        return 'AI Thinking…';
+      case 'handling':
+        return 'Finalizing…';
+      case 'complete':
+        return 'Done!';
+      default:
+        return 'AI Creating...';
+    }
+  };
+
+  // Helper function to get stage colors and icons
+  const getStageStyle = (stage) => {
+    switch (stage) {
+      case 'prep':
+        return {
+          bg: 'blue.500',
+          icon: Loader2,
+          color: 'white'
+        };
+      case 'processing':
+        return {
+          bg: 'purple.500',
+          icon: Sparkles,
+          color: 'white'
+        };
+      case 'handling':
+        return {
+          bg: 'orange.500',
+          icon: Zap,
+          color: 'white'
+        };
+      case 'complete':
+        return {
+          bg: 'green.500',
+          icon: CheckCircle,
+          color: 'white'
+        };
+      default:
+        return {
+          bg: 'purple.500',
+          icon: Sparkles,
+          color: 'white'
+        };
+    }
+  };
+
+  // Check if we should show progress UI
+  const isGenerating = progress.stage !== 'idle' && progress.stage !== 'complete';
+  const shouldShowProgress = progress.stage !== 'idle';
 
   return (
     <Box
@@ -91,21 +182,26 @@ const ModernHeader = ({
           <Flex align="center" gap={3}>
             <Box
               p={2}
-              bg="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+              bg="linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(262, 83%, 58%) 100%)"
               rounded="xl"
               shadow="lg"
+              _hover={{
+                transform: 'scale(1.05)',
+                transition: 'all 0.2s'
+              }}
             >
               <Brain size={24} color="white" />
             </Box>
             <VStack align="start" spacing={0}>
               <Heading
                 size="lg"
-                color="blue.600"
+                bgGradient="linear(to-r, blue.600, purple.600)"
+                bgClip="text"
                 fontWeight="bold"
               >
                 ECC Studio
               </Heading>
-              <Text fontSize="xs" color="gray.400">
+              <Text fontSize="xs" color="gray.600" fontWeight="medium">
                 AI-Powered Education
               </Text>
             </VStack>
@@ -121,7 +217,7 @@ const ModernHeader = ({
           <HStack spacing={4}>
             {/* AI Generation Status */}
             <AnimatePresence>
-              {isGenerating && (
+              {shouldShowProgress && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -129,8 +225,8 @@ const ModernHeader = ({
                   transition={{ duration: 0.3 }}
                 >
                   <Box
-                    bg="purple.500"
-                    color="white"
+                    bg={getStageStyle(progress.stage).bg}
+                    color={getStageStyle(progress.stage).color}
                     px={4}
                     py={2}
                     rounded="full"
@@ -139,16 +235,16 @@ const ModernHeader = ({
                     gap={2}
                   >
                     <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                      animate={isGenerating ? { rotate: 360 } : {}}
+                      transition={isGenerating ? { duration: 2, repeat: Infinity, ease: "linear" } : {}}
                     >
-                      <Sparkles size={16} />
+                      {React.createElement(getStageStyle(progress.stage).icon, { size: 16 })}
                     </motion.div>
                     <Text fontSize="sm" fontWeight="medium">
-                      AI Creating...
+                      {getStageText(progress.stage)}
                     </Text>
                     <Text fontSize="xs" opacity={0.8}>
-                      {Math.round(generationProgress)}%
+                      {Math.round(progress.value)}%
                     </Text>
                   </Box>
                 </motion.div>
@@ -202,13 +298,34 @@ const ModernHeader = ({
               />
             </Tooltip>
 
+            {/* Theme Toggle */}
+            <Tooltip label={`Switch to ${isDark ? 'Light' : 'Dark'} Mode`} hasArrow>
+              <IconButton
+                icon={isDark ? <Sun size={18} /> : <Moon size={18} />}
+                variant="ghost"
+                color={isDark ? 'gray.300' : 'gray.400'}
+                _hover={{ 
+                  color: isDark ? 'yellow.400' : 'purple.400', 
+                  bg: isDark ? 'gray.700' : 'purple.50',
+                  transform: 'scale(1.1) rotate(12deg)'
+                }}
+                rounded="full"
+                size="sm"
+                onClick={toggleTheme}
+                transition="all 0.2s"
+              />
+            </Tooltip>
+
             {/* Notifications */}
             <Tooltip label="Notifications" hasArrow>
               <IconButton
                 icon={<Bell size={18} />}
                 variant="ghost"
-                color="gray.400"
-                _hover={{ color: 'blue.400', bg: 'blue.50' }}
+                color={isDark ? 'gray.300' : 'gray.400'}
+                _hover={{ 
+                  color: isDark ? 'blue.300' : 'blue.400', 
+                  bg: isDark ? 'gray.700' : 'blue.50' 
+                }}
                 rounded="full"
                 size="sm"
                 onClick={handleNotificationClick}
@@ -216,13 +333,13 @@ const ModernHeader = ({
             </Tooltip>
 
             {/* User Menu */}
-            <Popover>
+            <Popover placement="bottom-end" closeOnBlur={true}>
               <PopoverTrigger>
                 <Button
                   rounded="full"
                   variant="ghost"
                   cursor="pointer"
-                  _hover={{ bg: 'blue.50' }}
+                  _hover={{ bg: isDark ? 'gray.700' : 'blue.50' }}
                   p={1}
                 >
                   <HStack spacing={2}>
@@ -233,24 +350,36 @@ const ModernHeader = ({
                       bg="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
                     />
                     <VStack align="start" spacing={0} display={{ base: 'none', md: 'flex' }}>
-                      <Text fontSize="sm" fontWeight="medium" color="gray.700">
+                      <Text fontSize="sm" fontWeight="medium" color={isDark ? "gray.200" : "gray.700"}>
                         {user?.displayName || 'User'}
                       </Text>
-                      <Text fontSize="xs" color="gray.500">
+                      <Text fontSize="xs" color={isDark ? "gray.400" : "gray.500"}>
                         {user?.email || 'guest@ecc.app'}
                       </Text>
                     </VStack>
                   </HStack>
                 </Button>
               </PopoverTrigger>
-              <PopoverContent
-                bg="white"
-                border="1px solid"
-                borderColor="gray.200"
-                shadow="xl"
+              <Portal>
+                <PopoverContent
+                bg={isDark ? "gray.800" : "white"}
+                color={isDark ? "gray.100" : "gray.900"}
+                border="2px solid"
+                borderColor={isDark ? "gray.600" : "gray.300"}
+                shadow="none"
                 rounded="xl"
                 p={2}
-                w="200px"
+                w="220px"
+                zIndex={99999}
+                _focus={{ boxShadow: "none" }}
+                position="fixed"
+                pointerEvents="auto"
+                isolation="isolate"
+                opacity={1}
+                backdropFilter="none"
+                boxShadow={isDark 
+                  ? "0 25px 50px -12px rgba(0, 0, 0, 0.9), 0 10px 20px -5px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.1)"
+                  : "0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 10px 20px -5px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(0, 0, 0, 0.1)"}
               >
                 <PopoverArrow />
                 <PopoverBody p={0}>
@@ -260,41 +389,57 @@ const ModernHeader = ({
                       variant="ghost"
                       justifyContent="flex-start"
                       rounded="md"
-                      _hover={{ bg: 'blue.50' }}
+                      _hover={{ bg: isDark ? 'gray.700' : 'blue.50', opacity: 1 }}
                       onClick={handleProfileClick}
                       size="sm"
-                      color="gray.700"
+                      w="full"
+                      color={isDark ? "gray.100" : "gray.700"}
+                      pointerEvents="auto"
+                      zIndex={1}
+                      opacity={1}
+                      bg={isDark ? 'gray.800' : 'white'}
                     >
-                      Profile Settings
+                      Profile
                     </Button>
                     <Button
                       leftIcon={<Settings size={16} />}
                       variant="ghost"
                       justifyContent="flex-start"
                       rounded="md"
-                      _hover={{ bg: 'blue.50' }}
+                      _hover={{ bg: isDark ? 'gray.700' : 'blue.50', opacity: 1 }}
                       onClick={handlePreferencesClick}
                       size="sm"
-                      color="gray.700"
+                      w="full"
+                      color={isDark ? "gray.100" : "gray.700"}
+                      pointerEvents="auto"
+                      zIndex={1}
+                      opacity={1}
+                      bg={isDark ? 'gray.800' : 'white'}
                     >
-                      Preferences
+                      Settings
                     </Button>
-                    <Divider />
+                    <Divider my={1} borderColor={isDark ? "gray.700" : "gray.200"} />
                     <Button
                       leftIcon={<LogOut size={16} />}
                       variant="ghost"
                       justifyContent="flex-start"
                       rounded="md"
-                      _hover={{ bg: 'red.50', color: 'red.600' }}
-                      onClick={onLogout}
+                      _hover={{ bg: isDark ? 'red.900' : 'red.50', opacity: 1 }}
+                      onClick={handleLogout}
                       size="sm"
-                      color="gray.700"
+                      w="full"
+                      color={isDark ? "red.400" : "red.500"}
+                      pointerEvents="auto"
+                      zIndex={1}
+                      opacity={1}
+                      bg={isDark ? 'gray.800' : 'white'}
                     >
-                      Sign Out
+                      Sign out
                     </Button>
                   </VStack>
                 </PopoverBody>
               </PopoverContent>
+              </Portal>
             </Popover>
           </HStack>
         </motion.div>
@@ -302,7 +447,7 @@ const ModernHeader = ({
 
       {/* Generation Progress Bar */}
       <AnimatePresence>
-        {isGenerating && (
+        {shouldShowProgress && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
@@ -311,21 +456,33 @@ const ModernHeader = ({
           >
             <Box mt={4}>
               <Progress
-                value={generationProgress}
-                colorScheme="purple"
+                value={progress.value}
+                colorScheme={progress.stage === 'prep' ? 'blue' : 
+                            progress.stage === 'processing' ? 'purple' : 
+                            progress.stage === 'handling' ? 'orange' : 
+                            progress.stage === 'complete' ? 'green' : 'purple'}
                 size="sm"
                 rounded="full"
                 bg="gray.200"
                 isAnimated
-                hasStripe
+                hasStripe={isGenerating}
               />
-              <Text fontSize="xs" color="purple.600" mt={2} textAlign="center">
-                🤖 AI is thinking... {Math.round(generationProgress)}%
+              <Text fontSize="xs" color={`${progress.stage === 'prep' ? 'blue' : 
+                                         progress.stage === 'processing' ? 'purple' : 
+                                         progress.stage === 'handling' ? 'orange' : 
+                                         progress.stage === 'complete' ? 'green' : 'purple'}.600`} mt={2} textAlign="center">
+                🤖 {getStageText(progress.stage)} {Math.round(progress.value)}%
               </Text>
             </Box>
           </motion.div>
         )}
       </AnimatePresence>
+      
+      {/* Settings Panel */}
+      <SettingsPanel 
+        isOpen={isSettingsOpen} 
+        onClose={() => setIsSettingsOpen(false)} 
+      />
     </Box>
   );
 };

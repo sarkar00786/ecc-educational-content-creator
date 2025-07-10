@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Box,
   VStack,
@@ -63,6 +63,43 @@ const ModernContentGenerator = ({
   const [dragActive, setDragActive] = useState(false);
   const [validation, setValidation] = useState({});
   const fileInputRef = useRef(null);
+  
+  // Theme state to match app theme
+  const [isDark, setIsDark] = useState(() => {
+    const saved = localStorage.getItem('ecc-theme');
+    if (saved) return saved === 'dark';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+  
+  // Listen for theme changes
+  React.useEffect(() => {
+    const handleStorageChange = () => {
+      const saved = localStorage.getItem('ecc-theme');
+      if (saved) {
+        setIsDark(saved === 'dark');
+      } else {
+        setIsDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for direct theme changes from settings
+    const observer = new MutationObserver(() => {
+      const className = document.documentElement.className;
+      setIsDark(className === 'dark');
+    });
+    
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      observer.disconnect();
+    };
+  }, []);
 
   const steps = [
     {
@@ -167,20 +204,23 @@ const ModernContentGenerator = ({
         return (
           <VStack spacing={6} align="stretch">
             <Box>
-              <Text fontSize="lg" fontWeight="semibold" mb={4} color="gray.700">
+              <Text fontSize="lg" fontWeight="semibold" mb={4} color={isDark ? "gray.200" : "gray.700"}>
                 📚 Add Your Educational Content
               </Text>
-              <Text fontSize="sm" color="gray.600" mb={4}>
+              <Text fontSize="sm" color={isDark ? "gray.400" : "gray.600"} mb={4}>
                 Paste your text content or upload a file to get started
               </Text>
               
               {/* Drag and Drop Area */}
               <Box
-                border={`2px dashed ${dragActive ? '#3182ce' : '#cbd5e0'}`}
+                border={`2px dashed ${dragActive ? '#3182ce' : (isDark ? '#4a5568' : '#cbd5e0')}`}
                 borderRadius="xl"
                 p={8}
                 textAlign="center"
-                bg={dragActive ? 'blue.50' : 'gray.50'}
+                bg={dragActive 
+                  ? (isDark ? 'blue.900' : 'blue.50') 
+                  : (isDark ? 'gray.700' : 'gray.50')
+                }
                 cursor="pointer"
                 transition="all 0.2s"
                 onDragEnter={handleDrag}
@@ -188,15 +228,18 @@ const ModernContentGenerator = ({
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
-                _hover={{ bg: 'blue.50', borderColor: 'blue.300' }}
+                _hover={{ 
+                  bg: isDark ? 'blue.900' : 'blue.50', 
+                  borderColor: 'blue.300' 
+                }}
               >
                 <VStack spacing={4}>
                   <Icon as={Upload} size={40} color={dragActive ? 'blue.500' : 'gray.400'} />
                   <VStack spacing={1}>
-                    <Text fontWeight="medium" color="gray.700">
+                    <Text fontWeight="medium" color={isDark ? "gray.200" : "gray.700"}>
                       Drop your text file here or click to upload
                     </Text>
-                    <Text fontSize="sm" color="gray.500">
+                    <Text fontSize="sm" color={isDark ? "gray.400" : "gray.500"}>
                       Supports .txt files up to 10MB
                     </Text>
                   </VStack>
@@ -215,33 +258,52 @@ const ModernContentGenerator = ({
 
               {/* Text Input */}
               <Box>
-                <Text fontSize="sm" fontWeight="medium" mb={2} color="gray.700">
+                <Text fontSize="sm" fontWeight="medium" mb={2} color={isDark ? "gray.200" : "gray.700"}>
                   Or paste your content here:
                 </Text>
-                <Textarea
-                  value={bookContent}
-                  onChange={(e) => setBookContent(e.target.value)}
-                  placeholder="E.g., 'The Earth is the third planet from the Sun and the only astronomical object known to harbor life...'"
-                  minH="200px"
-                  bg="white"
-                  color="gray.800"
-                  border="2px solid"
-                  borderColor={validation.bookContent ? 'red.300' : 'gray.200'}
-                  rounded="xl"
-                  fontSize="sm"
-                  _focus={{
-                    borderColor: 'blue.400',
-                    boxShadow: '0 0 0 3px rgba(66, 153, 225, 0.1)'
-                  }}
-                  _placeholder={{ color: 'gray.400' }}
-                />
+              <Textarea
+                value={bookContent}
+                onChange={(e) => setBookContent(e.target.value)}
+                placeholder="E.g., 'The Earth is the third planet from the Sun and the only astronomical object known to harbor life...'"
+                minH="200px"
+                bg={isDark ? "gray.700" : "white"}
+                color={isDark ? "gray.100" : "gray.800"}
+                border="2px solid"
+                borderColor={validation.bookContent 
+                  ? 'red.300' 
+                  : bookContent.length > 50 
+                    ? 'green.300' 
+                    : (isDark ? 'gray.600' : 'gray.200')
+                }
+                rounded="xl"
+                fontSize="sm"
+                resize="vertical"
+                _placeholder={{ color: isDark ? "gray.400" : "gray.400" }}
+                _focus={{
+                  borderColor: validation.bookContent ? 'red.400' : bookContent.length > 50 ? 'green.400' : 'blue.400',
+                  boxShadow: validation.bookContent 
+                    ? (isDark ? '0 0 0 3px rgba(239, 68, 68, 0.2)' : '0 0 0 3px rgba(239, 68, 68, 0.1)')
+                    : bookContent.length > 50 
+                      ? (isDark ? '0 0 0 3px rgba(34, 197, 94, 0.2)' : '0 0 0 3px rgba(34, 197, 94, 0.1)')
+                      : (isDark ? '0 0 0 3px rgba(66, 153, 225, 0.2)' : '0 0 0 3px rgba(66, 153, 225, 0.1)'),
+                  transform: 'translateY(-1px)'
+                }}
+                _hover={{
+                  borderColor: validation.bookContent 
+                    ? 'red.300' 
+                    : bookContent.length > 50 
+                      ? 'green.300' 
+                      : (isDark ? 'gray.500' : 'gray.300')
+                }}
+                transition="all 0.2s"
+              />
                 {validation.bookContent && (
                   <Alert status="error" mt={2} rounded="lg">
                     <Text fontSize="sm" color="red.600">{validation.bookContent}</Text>
                   </Alert>
                 )}
                 <HStack justify="space-between" mt={2}>
-                  <Text fontSize="xs" color="gray.500">
+                  <Text fontSize="xs" color={isDark ? "gray.400" : "gray.500"}>
                     {bookContent.length} characters
                   </Text>
                   <Badge colorScheme={bookContent.length > 50 ? 'green' : 'gray'}>
@@ -257,17 +319,17 @@ const ModernContentGenerator = ({
         return (
           <VStack spacing={6} align="stretch">
             <Box>
-              <Text fontSize="lg" fontWeight="semibold" mb={4} color="gray.700">
+              <Text fontSize="lg" fontWeight="semibold" mb={4} color={isDark ? "gray.200" : "gray.700"}>
                 🎯 Define Your Audience
               </Text>
-              <Text fontSize="sm" color="gray.600" mb={6}>
+              <Text fontSize="sm" color={isDark ? "gray.400" : "gray.600"} mb={6}>
                 Help AI understand who will be reading this content
               </Text>
             </Box>
 
             <HStack spacing={4} align="start">
               <Box flex="1">
-                <Text fontSize="sm" fontWeight="medium" mb={2} color="gray.700">
+                <Text fontSize="sm" fontWeight="medium" mb={2} color={isDark ? "gray.200" : "gray.700"}>
                   <Users size={16} style={{ display: 'inline', marginRight: '8px' }} />
                   Class/Grade Level
                 </Text>
@@ -275,14 +337,17 @@ const ModernContentGenerator = ({
                   value={audienceClass}
                   onChange={(e) => setAudienceClass(e.target.value)}
                   placeholder="e.g., 5th Grade, University Level"
-                  bg="white"
-                  color="gray.800"
+                  bg={isDark ? "gray.700" : "white"}
+                  color={isDark ? "gray.100" : "gray.800"}
                   border="2px solid"
-                  borderColor={validation.audienceClass ? 'red.300' : 'gray.200'}
+                  borderColor={validation.audienceClass ? 'red.300' : (isDark ? 'gray.600' : 'gray.200')}
                   rounded="lg"
+                  _placeholder={{ color: isDark ? "gray.400" : "gray.500" }}
                   _focus={{
                     borderColor: 'blue.400',
-                    boxShadow: '0 0 0 3px rgba(66, 153, 225, 0.1)'
+                    boxShadow: isDark 
+                      ? '0 0 0 3px rgba(66, 153, 225, 0.2)'
+                      : '0 0 0 3px rgba(66, 153, 225, 0.1)'
                   }}
                 />
                 {validation.audienceClass && (
@@ -293,7 +358,7 @@ const ModernContentGenerator = ({
               </Box>
 
               <Box flex="1">
-                <Text fontSize="sm" fontWeight="medium" mb={2} color="gray.700">
+                <Text fontSize="sm" fontWeight="medium" mb={2} color={isDark ? "gray.200" : "gray.700"}>
                   <Clock size={16} style={{ display: 'inline', marginRight: '8px' }} />
                   Age Group
                 </Text>
@@ -301,14 +366,17 @@ const ModernContentGenerator = ({
                   value={audienceAge}
                   onChange={(e) => setAudienceAge(e.target.value)}
                   placeholder="e.g., 10-11 years old, Adults"
-                  bg="white"
-                  color="gray.800"
+                  bg={isDark ? "gray.700" : "white"}
+                  color={isDark ? "gray.100" : "gray.800"}
                   border="2px solid"
-                  borderColor={validation.audienceAge ? 'red.300' : 'gray.200'}
+                  borderColor={validation.audienceAge ? 'red.300' : (isDark ? 'gray.600' : 'gray.200')}
                   rounded="lg"
+                  _placeholder={{ color: isDark ? "gray.400" : "gray.500" }}
                   _focus={{
                     borderColor: 'blue.400',
-                    boxShadow: '0 0 0 3px rgba(66, 153, 225, 0.1)'
+                    boxShadow: isDark 
+                      ? '0 0 0 3px rgba(66, 153, 225, 0.2)'
+                      : '0 0 0 3px rgba(66, 153, 225, 0.1)'
                   }}
                 />
                 {validation.audienceAge && (
@@ -320,7 +388,7 @@ const ModernContentGenerator = ({
             </HStack>
 
             <Box>
-              <Text fontSize="sm" fontWeight="medium" mb={2} color="gray.700">
+              <Text fontSize="sm" fontWeight="medium" mb={2} color={isDark ? "gray.200" : "gray.700"}>
                 <MapPin size={16} style={{ display: 'inline', marginRight: '8px' }} />
                 Region/Cultural Context
               </Text>
@@ -328,14 +396,17 @@ const ModernContentGenerator = ({
                 value={audienceRegion}
                 onChange={(e) => setAudienceRegion(e.target.value)}
                 placeholder="e.g., India, Western Europe, Rural Africa"
-                bg="white"
-                color="gray.800"
+                bg={isDark ? "gray.700" : "white"}
+                color={isDark ? "gray.100" : "gray.800"}
                 border="2px solid"
-                borderColor={validation.audienceRegion ? 'red.300' : 'gray.200'}
+                borderColor={validation.audienceRegion ? 'red.300' : (isDark ? 'gray.600' : 'gray.200')}
                 rounded="lg"
+                _placeholder={{ color: isDark ? "gray.400" : "gray.500" }}
                 _focus={{
                   borderColor: 'blue.400',
-                  boxShadow: '0 0 0 3px rgba(66, 153, 225, 0.1)'
+                  boxShadow: isDark 
+                    ? '0 0 0 3px rgba(66, 153, 225, 0.2)'
+                    : '0 0 0 3px rgba(66, 153, 225, 0.1)'
                 }}
               />
               {validation.audienceRegion && (
@@ -347,7 +418,7 @@ const ModernContentGenerator = ({
 
             {/* Quick Audience Suggestions */}
             <Box>
-              <Text fontSize="sm" fontWeight="medium" mb={3} color="gray.700">
+              <Text fontSize="sm" fontWeight="medium" mb={3} color={isDark ? "gray.200" : "gray.700"}>
                 Quick Suggestions:
               </Text>
               <Flex flexWrap="wrap" gap={2}>
@@ -381,17 +452,17 @@ const ModernContentGenerator = ({
         return (
           <VStack spacing={6} align="stretch">
             <Box>
-              <Text fontSize="lg" fontWeight="semibold" mb={4} color="gray.700">
+              <Text fontSize="lg" fontWeight="semibold" mb={4} color={isDark ? "gray.200" : "gray.700"}>
                 ⚙️ Advanced Settings
               </Text>
-              <Text fontSize="sm" color="gray.600" mb={6}>
+              <Text fontSize="sm" color={isDark ? "gray.400" : "gray.600"} mb={6}>
                 Customize how your content is generated
               </Text>
             </Box>
 
             {/* Control Tier Selection */}
             <Box>
-              <Text fontSize="sm" fontWeight="medium" mb={3} color="gray.700">
+              <Text fontSize="sm" fontWeight="medium" mb={3} color={isDark ? "gray.200" : "gray.700"}>
                 Generation Mode:
               </Text>
               <RadioGroup value={controlTier} onChange={setControlTier}>
@@ -399,7 +470,7 @@ const ModernContentGenerator = ({
                   <Radio value="basic" colorScheme="blue">
                     <Box>
                       <Text fontWeight="medium">Basic</Text>
-                      <Text fontSize="xs" color="gray.600">
+                      <Text fontSize="xs" color={isDark ? "gray.400" : "gray.600"}>
                         Standard content generation with core features
                       </Text>
                     </Box>
@@ -407,7 +478,7 @@ const ModernContentGenerator = ({
                   <Radio value="advanced" colorScheme="purple">
                     <Box>
                       <Text fontWeight="medium">Advanced</Text>
-                      <Text fontSize="xs" color="gray.600">
+                      <Text fontSize="xs" color={isDark ? "gray.400" : "gray.600"}>
                         Fine-tune word count and add custom instructions
                       </Text>
                     </Box>
@@ -415,7 +486,7 @@ const ModernContentGenerator = ({
                   <Radio value="pro" colorScheme="orange">
                     <Box>
                       <Text fontWeight="medium">Pro (Future)</Text>
-                      <Text fontSize="xs" color="gray.600">
+                      <Text fontSize="xs" color={isDark ? "gray.400" : "gray.600"}>
                         Advanced features with quizzes and personalization
                       </Text>
                     </Box>
@@ -435,7 +506,7 @@ const ModernContentGenerator = ({
                 >
                   <VStack spacing={4} align="stretch">
                     <Box>
-                      <Text fontSize="sm" fontWeight="medium" mb={2} color="gray.700">
+                      <Text fontSize="sm" fontWeight="medium" mb={2} color={isDark ? "gray.200" : "gray.700"}>
                         <Target size={16} style={{ display: 'inline', marginRight: '8px' }} />
                         Target Word Count
                       </Text>
@@ -444,14 +515,17 @@ const ModernContentGenerator = ({
                         value={outputWordCount}
                         onChange={(e) => setOutputWordCount(e.target.value)}
                         placeholder="e.g., 500"
-                        bg="white"
-                        color="gray.800"
+                        bg={isDark ? "gray.700" : "white"}
+                        color={isDark ? "gray.100" : "gray.800"}
                         border="2px solid"
-                        borderColor={validation.outputWordCount ? 'red.300' : 'gray.200'}
+                        borderColor={validation.outputWordCount ? 'red.300' : (isDark ? 'gray.600' : 'gray.200')}
                         rounded="lg"
+                        _placeholder={{ color: isDark ? "gray.400" : "gray.500" }}
                         _focus={{
                           borderColor: 'blue.400',
-                          boxShadow: '0 0 0 3px rgba(66, 153, 225, 0.1)'
+                          boxShadow: isDark 
+                            ? '0 0 0 3px rgba(66, 153, 225, 0.2)'
+                            : '0 0 0 3px rgba(66, 153, 225, 0.1)'
                         }}
                       />
                       {validation.outputWordCount && (
@@ -462,7 +536,7 @@ const ModernContentGenerator = ({
                     </Box>
 
                     <Box>
-                      <Text fontSize="sm" fontWeight="medium" mb={2} color="gray.700">
+                      <Text fontSize="sm" fontWeight="medium" mb={2} color={isDark ? "gray.200" : "gray.700"}>
                         <Wand2 size={16} style={{ display: 'inline', marginRight: '8px' }} />
                         Custom Instructions
                       </Text>
@@ -470,15 +544,18 @@ const ModernContentGenerator = ({
                         value={customInstructions}
                         onChange={(e) => setCustomInstructions(e.target.value)}
                         placeholder="e.g., 'Use a conversational tone, include bullet points, avoid technical jargon'"
-                        bg="white"
-                        color="gray.800"
+                        bg={isDark ? "gray.700" : "white"}
+                        color={isDark ? "gray.100" : "gray.800"}
                         border="2px solid"
-                        borderColor="gray.200"
+                        borderColor={isDark ? "gray.600" : "gray.200"}
                         rounded="lg"
                         minH="100px"
+                        _placeholder={{ color: isDark ? "gray.400" : "gray.500" }}
                         _focus={{
                           borderColor: 'blue.400',
-                          boxShadow: '0 0 0 3px rgba(66, 153, 225, 0.1)'
+                          boxShadow: isDark 
+                            ? '0 0 0 3px rgba(66, 153, 225, 0.2)'
+                            : '0 0 0 3px rgba(66, 153, 225, 0.1)'
                         }}
                       />
                     </Box>
@@ -505,18 +582,23 @@ const ModernContentGenerator = ({
           <VStack spacing={6} align="stretch">
             <Box textAlign="center">
               <Icon as={Brain} size={48} color="purple.500" mb={4} />
-              <Text fontSize="lg" fontWeight="semibold" mb={2} color="gray.700">
+              <Text fontSize="lg" fontWeight="semibold" mb={2} color={isDark ? "gray.200" : "gray.700"}>
                 🚀 Ready to Generate!
               </Text>
-              <Text fontSize="sm" color="gray.600" mb={6}>
+              <Text fontSize="sm" color={isDark ? "gray.400" : "gray.600"} mb={6}>
                 Your AI-powered educational content is ready to be created
               </Text>
             </Box>
 
             {/* Generation Summary */}
-            <Card bg="blue.50" border="2px solid" borderColor="blue.200">
+            <Card 
+              bg={isDark ? "blue.900" : "blue.50"} 
+              border="2px solid" 
+              borderColor={isDark ? "blue.700" : "blue.200"}
+              color={isDark ? "gray.100" : "gray.900"}
+            >
               <CardBody>
-                <Text fontSize="sm" fontWeight="medium" mb={3} color="blue.800">
+                <Text fontSize="sm" fontWeight="medium" mb={3} color={isDark ? "blue.200" : "blue.800"}>
                   Generation Summary:
                 </Text>
                 <VStack align="start" spacing={2}>
@@ -579,13 +661,14 @@ const ModernContentGenerator = ({
 
   return (
     <Card 
-      bg="rgba(255, 255, 255, 0.95)" 
+      bg={isDark ? "rgba(31, 41, 55, 0.95)" : "rgba(255, 255, 255, 0.95)"} 
+      color={isDark ? "gray.100" : "gray.900"}
       shadow="2xl" 
       rounded="2xl" 
       overflow="hidden"
       backdropFilter="blur(10px)"
       border="1px solid"
-      borderColor="purple.200"
+      borderColor={isDark ? "purple.600" : "purple.200"}
       position="relative"
       _before={{
         content: '""',
@@ -599,7 +682,10 @@ const ModernContentGenerator = ({
       }}
     >
       <CardHeader 
-        bg="linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)" 
+        bg={isDark 
+          ? "linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%)"
+          : "linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)"
+        }
         pb={6}
         position="relative"
         zIndex={2}
@@ -636,10 +722,10 @@ const ModernContentGenerator = ({
                   )}
                 </Box>
                 <VStack spacing={0}>
-                  <Text fontSize="xs" fontWeight="medium" color="gray.700">
+                  <Text fontSize="xs" fontWeight="medium" color={isDark ? "gray.200" : "gray.700"}>
                     {step.title}
                   </Text>
-                  <Text fontSize="2xs" color="gray.500" textAlign="center">
+                  <Text fontSize="2xs" color={isDark ? "gray.400" : "gray.500"} textAlign="center">
                     {step.description}
                   </Text>
                 </VStack>
@@ -674,7 +760,7 @@ const ModernContentGenerator = ({
 
       {/* Navigation */}
       {currentStep < steps.length - 1 && (
-        <Box p={6} bg="gray.50" borderTop="1px solid" borderColor="gray.200">
+        <Box p={6} bg={isDark ? "gray.800" : "gray.50"} borderTop="1px solid" borderColor={isDark ? "gray.700" : "gray.200"}>
           <HStack justify="space-between">
             <Button
               variant="ghost"
