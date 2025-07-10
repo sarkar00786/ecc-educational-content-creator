@@ -621,15 +621,15 @@ const App = () => {
       if (!response.ok) {
         const errorData = await response.json();
         
-        // Check if error is retryable (503 overloaded, 429 rate limit)
-        if ((response.status === 503 || response.status === 429) && retryCount < maxRetries) {
-          const delay = (retryCount + 1) * 3000; // 3s, 6s delays
-          console.log(`API overloaded, retrying in ${delay}ms... (attempt ${retryCount + 1}/${maxRetries})`);
+        // Check if error is retryable (503 overloaded, 429 rate limit, or server errors)
+        if ((response.status === 503 || response.status === 429 || response.status === 500) && retryCount < maxRetries) {
+          const delay = (retryCount + 1) * 5000; // 5s, 10s delays
+          console.log(`API issue detected, retrying in ${delay}ms... (attempt ${retryCount + 1}/${maxRetries})`);
           
           // Show user-friendly retry message
           toast({
-            title: "AI Service Busy",
-            description: `The AI is currently busy. Retrying in ${delay/1000} seconds... (${retryCount + 1}/${maxRetries})`,
+            title: "AI Service Temporarily Busy",
+            description: `Please wait... Retrying in ${delay/1000} seconds (${retryCount + 1}/${maxRetries})`,
             status: "info",
             duration: delay - 500,
             isClosable: true,

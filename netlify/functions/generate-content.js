@@ -75,47 +75,20 @@ exports.handler = async (event, context) => {
     const lastUserMessage = chatHistory[chatHistory.length - 1].parts[0].text;
     console.log('Sending message to Gemini API with message length:', lastUserMessage.length);
     
-    // Function to attempt API call with retry logic
-    const attemptGeneration = async (retries = 3) => {
-      for (let attempt = 1; attempt <= retries; attempt++) {
-        try {
-          console.log(`Attempt ${attempt}/${retries}`);
-          
-          const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Request timeout')), 20000); // 20 second timeout per attempt
-          });
-          
-          const result = await Promise.race([
-            model.generateContent(lastUserMessage),
-            timeoutPromise
-          ]);
-          
-          const response = await result.response;
-          const text = response.text();
-          
-          console.log(`Success on attempt ${attempt}`);
-          return text;
-          
-        } catch (error) {
-          console.log(`Attempt ${attempt} failed:`, error.message);
-          
-          // Check if it's a rate limit or overload error
-          if (error.message.includes('overloaded') || error.message.includes('503') || error.message.includes('429')) {
-            if (attempt < retries) {
-              const delay = attempt * 2000; // Exponential backoff: 2s, 4s, 6s
-              console.log(`Waiting ${delay}ms before retry...`);
-              await new Promise(resolve => setTimeout(resolve, delay));
-              continue;
-            }
-          }
-          
-          // If it's not a retry-able error or we've exhausted retries, throw the error
-          throw error;
-        }
-      }
-    };
+    // Simplified approach - single attempt with better error handling
+    console.log('Making single API call...');
     
-    const text = await attemptGeneration(3);
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Request timeout after 25 seconds')), 25000);
+    });
+    
+    const result = await Promise.race([
+      model.generateContent(lastUserMessage),
+      timeoutPromise
+    ]);
+    
+    const response = await result.response;
+    const text = response.text();
     
     console.log('Success - Generated content length:', text.length);
 
@@ -127,23 +100,16 @@ exports.handler = async (event, context) => {
 
   } catch (error) {
     console.error('Error in Netlify Function:', error);
-    console.error('Error stack:', error.stack);
     
-    // Provide user-friendly error messages
-    let userMessage = 'Failed to generate content';
-    let statusCode = 500;
+    // Simple error response to prevent function crashes
+    let userMessage = 'AI service temporarily unavailable';
+    let statusCode = 503;
     
-    if (error.message.includes('overloaded') || error.message.includes('503')) {
-      userMessage = 'The AI service is currently overloaded. Please try again in a few moments.';
-      statusCode = 503;
-    } else if (error.message.includes('429') || error.message.includes('quota')) {
-      userMessage = 'Rate limit exceeded. Please wait a moment before trying again.';
-      statusCode = 429;
-    } else if (error.message.includes('timeout')) {
-      userMessage = 'Request timed out. Please try again with shorter content.';
+    if (error.message.includes('timeout')) {
+      userMessage = 'Request timed out. Please try again.';
       statusCode = 408;
-    } else if (error.message.includes('API key')) {
-      userMessage = 'Server configuration error. Please contact support.';
+    } else if (error.message.includes('API key') || error.message.includes('authentication')) {
+      userMessage = 'API configuration error. Please contact support.';
       statusCode = 500;
     }
     
@@ -151,10 +117,8 @@ exports.handler = async (event, context) => {
       statusCode: statusCode,
       headers: corsHeaders,
       body: JSON.stringify({ 
-        error: userMessage, 
-        details: error.message,
-        type: error.constructor.name,
-        retryable: statusCode === 503 || statusCode === 429
+        error: userMessage,
+        retryable: true
       }),
     };
   }
