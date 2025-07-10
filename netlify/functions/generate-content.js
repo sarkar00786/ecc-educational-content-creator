@@ -1,125 +1,95 @@
 // netlify/functions/generate-content.js
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-
-// Access the API key from Netlify Environment Variables
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-
 exports.handler = async (event, context) => {
-  console.log('Function started - Method:', event.httpMethod);
-  
-  // Set timeout to prevent 502 errors
-  context.callbackWaitsForEmptyEventLoop = false;
-  
-  // Add CORS headers
-  const corsHeaders = {
+  // CORS headers
+  const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Content-Type': 'application/json'
   };
   
-  // Handle preflight OPTIONS request
+  // Handle preflight
   if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers: corsHeaders,
-      body: ''
-    };
+    return { statusCode: 200, headers, body: '' };
   }
   
-  // Only allow POST requests
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
-      headers: corsHeaders,
-      body: JSON.stringify({ error: 'Method Not Allowed' }),
-    };
-  }
-
-  // Basic validation for the API key
-  if (!GEMINI_API_KEY) {
-    console.error("GEMINI_API_KEY is not set in Netlify Environment Variables.");
-    return {
-      statusCode: 500,
-      headers: corsHeaders,
-      body: JSON.stringify({ error: 'Server configuration error: API key missing.' }),
+      headers,
+      body: JSON.stringify({ error: 'Method not allowed' })
     };
   }
   
-  // Initialize the Google Generative AI client here to avoid initialization errors
-  const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-
   try {
-    const body = JSON.parse(event.body || '{}');
-    const chatHistory = body.contents || body.chatHistory || [];
-
-    console.log('Request body parsed, chatHistory length:', chatHistory.length);
-    
-    // Validate chatHistory
-    if (!Array.isArray(chatHistory) || chatHistory.length === 0 || !chatHistory[chatHistory.length - 1]?.parts?.[0]?.text) {
-      console.error('Invalid chat history:', chatHistory);
+    // Check API key
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
       return {
-        statusCode: 400,
-        headers: corsHeaders,
-        body: JSON.stringify({ error: 'Invalid or empty chat history provided.' }),
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ error: 'API key not configured' })
       };
     }
-
-    console.log('Getting model...');
-    // Get the model
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-    console.log('Generating content with retry logic...');
     
-    // Use generateContent instead of chat for simpler approach
-    const lastUserMessage = chatHistory[chatHistory.length - 1].parts[0].text;
-    console.log('Sending message to Gemini API with message length:', lastUserMessage.length);
-    
-    // Simplified approach - single attempt with better error handling
-    console.log('Making single API call...');
-    
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Request timeout after 25 seconds')), 25000);
-    });
-    
-    const result = await Promise.race([
-      model.generateContent(lastUserMessage),
-      timeoutPromise
-    ]);
-    
-    const response = await result.response;
-    const text = response.text();
-    
-    console.log('Success - Generated content length:', text.length);
-
-    return {
-      statusCode: 200,
-      headers: corsHeaders,
-      body: JSON.stringify({ generatedContent: text }),
-    };
-
-  } catch (error) {
-    console.error('Error in Netlify Function:', error);
-    
-    // Simple error response to prevent function crashes
-    let userMessage = 'AI service temporarily unavailable';
-    let statusCode = 503;
-    
-    if (error.message.includes('timeout')) {
-      userMessage = 'Request timed out. Please try again.';
-      statusCode = 408;
-    } else if (error.message.includes('API key') || error.message.includes('authentication')) {
-      userMessage = 'API configuration error. Please contact support.';
-      statusCode = 500;
+    // Parse request
+    const { contents } = JSON.parse(event.body || '{}');
+    if (!contents || !contents.length || !contents[contents.length - 1]?.parts?.[0]?.text) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Invalid request format' })
+      };
     }
     
+    const message = contents[contents.length - 1].parts[0].text;
+    
+    // Call Gemini API directly using fetch
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    
+    const response = await fetch(geminiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: message }]
+        }]
+      })
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Gemini API error:', response.status, errorText);
+      return {
+        statusCode: response.status,
+        headers,
+        body: JSON.stringify({ 
+          error: 'AI service temporarily unavailable',
+          retryable: true
+        })
+      };
+    }
+    
+    const result = await response.json();
+    const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text || 'No content generated';
+    
     return {
-      statusCode: statusCode,
-      headers: corsHeaders,
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({ generatedContent: generatedText })
+    };
+    
+  } catch (error) {
+    console.error('Function error:', error);
+    return {
+      statusCode: 500,
+      headers,
       body: JSON.stringify({ 
-        error: userMessage,
+        error: 'Service temporarily unavailable',
         retryable: true
-      }),
+      })
     };
   }
 };
