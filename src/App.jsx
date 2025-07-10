@@ -1390,7 +1390,7 @@ Answer: William Shakespeare\n---QUIZ_END---`;
                     bg={isDark ? "gray.700" : "white"}
                     borderColor={isDark ? "gray.600" : "gray.300"}
                     color={isDark ? "white" : "gray.800"}
-                    _placeholder={{ color: 'gray.400' }}
+                    _placeholder={{ color: isDark ? 'gray.400' : 'gray.700' }}
                     focusBorderColor="blue.500"
                     placeholder="your@example.com"
                     value={email}
@@ -1406,7 +1406,7 @@ Answer: William Shakespeare\n---QUIZ_END---`;
                     bg={isDark ? "gray.700" : "white"}
                     borderColor={isDark ? "gray.600" : "gray.300"}
                     color={isDark ? "white" : "gray.800"}
-                    _placeholder={{ color: 'gray.400' }}
+                    _placeholder={{ color: isDark ? 'gray.400' : 'gray.700' }}
                     focusBorderColor="blue.500"
                     placeholder="********"
                     value={password}
@@ -1575,11 +1575,11 @@ Answer: William Shakespeare\n---QUIZ_END---`;
                   p={6} 
                   border="1px solid" 
                   borderColor={isDark ? "gray.700" : "gray.200"}
-                  color={isDark ? "gray.100" : "gray.900"}
+                  color={isDark ? "gray.100" : "black"}
                   backdropFilter="blur(10px)"
                 >
                   <CardHeader display="flex" justifyContent="space-between" alignItems="center" p={0} mb={4}>
-                    <Heading as="h3" size="md" color={isDark ? "gray.100" : "gray.800"} display="flex" alignItems="center">
+                    <Heading as="h3" size="md" color={isDark ? "gray.100" : "black"} display="flex" alignItems="center">
                       <FileText size={20} style={{ marginRight: '0.5rem', color: 'var(--chakra-colors-blue-500)' }} />
                       {isRenaming ? (
                         <InputGroup>
@@ -1592,7 +1592,7 @@ Answer: William Shakespeare\n---QUIZ_END---`;
                             p={1}
                             bg={isDark ? "gray.700" : "white"}
                             borderColor={isDark ? "gray.600" : "gray.300"}
-                            color={isDark ? "gray.100" : "gray.800"}
+                            color={isDark ? "gray.100" : "gray.900"}
                             focusBorderColor="blue.500"
                             autoFocus
                             rounded="md"
@@ -1619,8 +1619,8 @@ Answer: William Shakespeare\n---QUIZ_END---`;
                     <Textarea
                       bg={isDark ? "gray.700" : "gray.50"}
                       borderColor={isDark ? "gray.600" : "gray.300"}
-                      color={isDark ? "gray.100" : "gray.800"}
-                      _placeholder={{ color: isDark ? "gray.400" : "gray.400" }}
+                      color={isDark ? "gray.100" : "gray.900"}
+                      _placeholder={{ color: isDark ? "gray.400" : "gray.900" }}
                       focusBorderColor="blue.500"
                       h="256px"
                       resize="vertical"
@@ -1692,14 +1692,14 @@ Answer: William Shakespeare\n---QUIZ_END---`;
                           border="1px" 
                           borderColor={isDark ? "orange.600" : "orange.200"}
                         >
-                          <Text fontWeight="semibold" color={isDark ? "gray.100" : "gray.800"} mb={3}>Question {qIndex + 1}: {q.question}</Text>
+                          <Text fontWeight="semibold" color={isDark ? "gray.100" : "gray.900"} mb={3}>Question {qIndex + 1}: {q.question}</Text>
                           <InputGroup>
                             <Input
                               type="text"
                               bg={isDark ? "gray.700" : "gray.50"}
                               borderColor={isDark ? "gray.600" : "gray.300"}
-                              color={isDark ? "gray.100" : "gray.800"}
-                              _placeholder={{ color: 'gray.400' }}
+                              color={isDark ? "gray.100" : "gray.900"}
+                              _placeholder={{ color: isDark ? 'gray.400' : 'gray.900' }}
                               focusBorderColor="orange.500"
                               placeholder="Your answer"
                               value={quizAnswers[q.id] || ''}
@@ -1744,14 +1744,14 @@ Answer: William Shakespeare\n---QUIZ_END---`;
                 color={isDark ? "gray.100" : "gray.900"}
               >
                 <CardHeader p={0} mb={4}>
-                  <Heading as="h3" size="md" color={isDark ? "gray.100" : "gray.800"}>Give Us Feedback:</Heading>
+                  <Heading as="h3" size="md" color={isDark ? "gray.100" : "black"}>Give Us Feedback:</Heading>
                 </CardHeader>
                 <CardBody p={0}>
                   <Textarea
                     bg={isDark ? "gray.700" : "gray.50"}
                     borderColor={isDark ? "gray.600" : "gray.300"}
-                    color={isDark ? "gray.100" : "gray.800"}
-                    _placeholder={{ color: 'gray.400' }}
+                    color={isDark ? "gray.100" : "gray.900"}
+                    _placeholder={{ color: isDark ? 'gray.400' : 'gray.900' }}
                     focusBorderColor="blue.500"
                     h="112px"
                     resize="vertical"
@@ -1797,20 +1797,20 @@ Answer: William Shakespeare\n---QUIZ_END---`;
                 color={isDark ? "gray.100" : "gray.900"}
               >
                 <CardHeader p={0} mb={4} textAlign="center">
-                  <Heading as="h3" size="md" color={isDark ? "gray.100" : "gray.800"} display="flex" alignItems="center" justifyContent="center">
+                  <Heading as="h3" size="md" color={isDark ? "gray.100" : "black"} display="flex" alignItems="center" justifyContent="center">
                     <HelpCircle size={20} style={{ marginRight: '0.5rem' }} />
                     Need Help?
                   </Heading>
                 </CardHeader>
                 <CardBody p={0} textAlign="center">
-                  <Text color={isDark ? "gray.300" : "gray.600"} mb={4}>
+                  <Text color={isDark ? "gray.300" : "black"} mb={4}>
                     For support, please contact us at{' '}
                     <Link href="mailto:azkabloch786@gmail.com" color="blue.500" _hover={{ textDecoration: 'underline' }} display="inline-flex" alignItems="center">
                       <Mail size={16} style={{ marginRight: '0.5rem' }} /> azkabloch786@gmail.com
                     </Link>
                     .
                   </Text>
-                  <Text fontSize="sm" color="gray.400">
+                  <Text fontSize="sm" color={isDark ? "gray.400" : "black"}>
                     (This is a placeholder for a future comprehensive help center or FAQ.)
                   </Text>
                 </CardBody>

@@ -201,7 +201,7 @@ const ModernHeader = ({
               >
                 ECC Studio
               </Heading>
-              <Text fontSize="xs" color="gray.600" fontWeight="medium">
+              <Text fontSize="xs" color={isDark ? "gray.600" : "gray.700"} fontWeight="medium">
                 AI-Powered Education
               </Text>
             </VStack>
@@ -291,7 +291,7 @@ const ModernHeader = ({
               <IconButton
                 icon={<Search size={18} />}
                 variant="ghost"
-                color="gray.400"
+                color={isDark ? "gray.400" : "gray.600"}
                 _hover={{ color: 'blue.400', bg: 'blue.50' }}
                 rounded="full"
                 size="sm"
@@ -303,7 +303,7 @@ const ModernHeader = ({
               <IconButton
                 icon={isDark ? <Sun size={18} /> : <Moon size={18} />}
                 variant="ghost"
-                color={isDark ? 'gray.300' : 'gray.400'}
+                color={isDark ? 'gray.300' : 'gray.600'}
                 _hover={{ 
                   color: isDark ? 'yellow.400' : 'purple.400', 
                   bg: isDark ? 'gray.700' : 'purple.50',
@@ -321,7 +321,7 @@ const ModernHeader = ({
               <IconButton
                 icon={<Bell size={18} />}
                 variant="ghost"
-                color={isDark ? 'gray.300' : 'gray.400'}
+                color={isDark ? 'gray.300' : 'gray.600'}
                 _hover={{ 
                   color: isDark ? 'blue.300' : 'blue.400', 
                   bg: isDark ? 'gray.700' : 'blue.50' 
@@ -350,10 +350,10 @@ const ModernHeader = ({
                       bg="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
                     />
                     <VStack align="start" spacing={0} display={{ base: 'none', md: 'flex' }}>
-                      <Text fontSize="sm" fontWeight="medium" color={isDark ? "gray.200" : "gray.700"}>
+                      <Text fontSize="sm" fontWeight="medium" color={isDark ? "gray.200" : "gray.900"}>
                         {user?.displayName || 'User'}
                       </Text>
-                      <Text fontSize="xs" color={isDark ? "gray.400" : "gray.500"}>
+                      <Text fontSize="xs" color={isDark ? "gray.400" : "gray.700"}>
                         {user?.email || 'guest@ecc.app'}
                       </Text>
                     </VStack>
@@ -393,7 +393,7 @@ const ModernHeader = ({
                       onClick={handleProfileClick}
                       size="sm"
                       w="full"
-                      color={isDark ? "gray.100" : "gray.700"}
+                      color={isDark ? "gray.100" : "gray.900"}
                       pointerEvents="auto"
                       zIndex={1}
                       opacity={1}
@@ -410,7 +410,7 @@ const ModernHeader = ({
                       onClick={handlePreferencesClick}
                       size="sm"
                       w="full"
-                      color={isDark ? "gray.100" : "gray.700"}
+                      color={isDark ? "gray.100" : "gray.900"}
                       pointerEvents="auto"
                       zIndex={1}
                       opacity={1}

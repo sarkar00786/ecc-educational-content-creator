@@ -563,27 +563,27 @@ const ModernContentHistory = ({
                   <Text
                     fontSize="md"
                     fontWeight="semibold"
-                    color={isDark ? "gray.100" : "gray.800"}
+                    color={isDark ? "gray.100" : "gray.900"}
                     noOfLines={1}
                   >
                     {item.name || `Content - ${formatDate(item.timestamp)}`}
                   </Text>
                   <HStack spacing={4}>
                     <HStack spacing={1}>
-                      <Users size={12} color="gray" />
-                      <Text fontSize="xs" color={isDark ? "gray.400" : "gray.600"}>
+                      <Users size={12} color={isDark ? "gray" : "black"} />
+                      <Text fontSize="xs" color={isDark ? "gray.400" : "gray.700"}>
                         {item.audienceClass}
                       </Text>
                     </HStack>
                     <HStack spacing={1}>
-                      <Clock size={12} color="gray" />
-                      <Text fontSize="xs" color={isDark ? "gray.400" : "gray.600"}>
+                      <Clock size={12} color={isDark ? "gray" : "black"} />
+                      <Text fontSize="xs" color={isDark ? "gray.400" : "black"}>
                         {item.audienceAge}
                       </Text>
                     </HStack>
                     <HStack spacing={1}>
-                      <MapPin size={12} color="gray" />
-                      <Text fontSize="xs" color={isDark ? "gray.400" : "gray.600"}>
+                      <MapPin size={12} color={isDark ? "gray" : "black"} />
+                      <Text fontSize="xs" color={isDark ? "gray.400" : "black"}>
                         {item.audienceRegion}
                       </Text>
                     </HStack>
@@ -599,12 +599,12 @@ const ModernContentHistory = ({
                     >
                       {item.controlTier}
                     </Badge>
-                    <Text fontSize="xs" color={isDark ? "gray.400" : "gray.500"}>
+                    <Text fontSize="xs" color={isDark ? "gray.400" : "black"}>
                       {formatDate(item.timestamp)}
                     </Text>
                   </HStack>
                   <HStack spacing={2}>
-                    <Text fontSize="xs" color={isDark ? "gray.400" : "gray.500"}>
+                    <Text fontSize="xs" color={isDark ? "gray.400" : "black"}>
                       {item.generatedContent?.length || 0} chars
                     </Text>
                     {item.quizzes && item.quizzes.length > 0 && (
@@ -621,11 +621,12 @@ const ModernContentHistory = ({
                       icon={<Eye size={16} />}
                       variant="ghost"
                       size="sm"
+                      color={isDark ? 'gray.400' : 'black'}
                       onClick={(e) => {
                         e.stopPropagation();
                         handleItemAction('view', item);
                       }}
-                      _hover={{ bg: 'blue.50', color: 'blue.600' }}
+                      _hover={{ bg: isDark ? 'blue.800' : 'blue.50', color: 'blue.600' }}
                       aria-label="View and edit content"
                     />
                   </Tooltip>
@@ -634,11 +635,12 @@ const ModernContentHistory = ({
                       icon={<Copy size={16} />}
                       variant="ghost"
                       size="sm"
+                      color={isDark ? 'gray.400' : 'black'}
                       onClick={(e) => {
                         e.stopPropagation();
                         handleItemAction('copy', item);
                       }}
-                      _hover={{ bg: 'gray.50' }}
+                      _hover={{ bg: isDark ? 'gray.700' : 'gray.100', color: isDark ? 'gray.200' : 'gray.800' }}
                       aria-label="Copy content to clipboard"
                     />
                   </Tooltip>
@@ -647,11 +649,12 @@ const ModernContentHistory = ({
                       icon={<Trash2 size={16} />}
                       variant="ghost"
                       size="sm"
+                      color={isDark ? 'gray.400' : 'red.600'}
                       onClick={(e) => {
                         e.stopPropagation();
                         handleItemAction('delete', item);
                       }}
-                      _hover={{ bg: 'red.50', color: 'red.600' }}
+                      _hover={{ bg: isDark ? 'red.900' : 'red.50', color: 'red.600' }}
                       aria-label="Delete content"
                     />
                   </Tooltip>
@@ -667,7 +670,7 @@ const ModernContentHistory = ({
                     <Text
                       fontSize={isSmall ? "xs" : "sm"}
                       fontWeight="semibold"
-                      color={isDark ? "gray.100" : "gray.800"}
+                      color={isDark ? "gray.100" : "gray.900"}
                       noOfLines={isSmall ? 1 : 2}
                       lineHeight="1.3"
                     >
@@ -681,7 +684,7 @@ const ModernContentHistory = ({
                       >
                         {item.controlTier}
                       </Badge>
-                      <Text fontSize={isSmall ? "2xs" : "2xs"} color={isDark ? "gray.400" : "gray.500"}>
+                      <Text fontSize={isSmall ? "2xs" : "2xs"} color={isDark ? "gray.400" : "black"}>
                         <Calendar size={isSmall ? 8 : 10} style={{ display: 'inline', marginRight: '2px' }} />
                         {formatDate(item.timestamp)}
                       </Text>
@@ -695,8 +698,8 @@ const ModernContentHistory = ({
                         variant="ghost"
                         size="sm"
                         onClick={(e) => e.stopPropagation()}
-                        color="gray.600"
-                        _hover={{ bg: 'gray.100', color: 'gray.800' }}
+                        color={isDark ? 'gray.400' : 'black'}
+                        _hover={{ bg: isDark ? 'gray.700' : 'gray.100', color: isDark ? 'gray.200' : 'gray.800' }}
                         aria-label="More options"
                       />
                     </PopoverTrigger>
@@ -766,20 +769,20 @@ const ModernContentHistory = ({
                   {/* Audience Info */}
                   <HStack spacing={2} flexWrap="wrap">
                     <HStack spacing={1}>
-                      <Users size={isSmall ? 10 : 12} color="gray" />
-                      <Text fontSize={isSmall ? "2xs" : "2xs"} color={isDark ? "gray.400" : "gray.600"}>
+                      <Users size={isSmall ? 10 : 12} color={isDark ? "gray" : "gray.600"} />
+                      <Text fontSize={isSmall ? "2xs" : "2xs"} color={isDark ? "gray.400" : "gray.700"}>
                         {item.audienceClass}
                       </Text>
                     </HStack>
                     <HStack spacing={1}>
-                      <Clock size={isSmall ? 10 : 12} color="gray" />
-                      <Text fontSize={isSmall ? "2xs" : "2xs"} color={isDark ? "gray.400" : "gray.600"}>
+                      <Clock size={isSmall ? 10 : 12} color={isDark ? "gray" : "gray.600"} />
+                      <Text fontSize={isSmall ? "2xs" : "2xs"} color={isDark ? "gray.400" : "gray.700"}>
                         {item.audienceAge}
                       </Text>
                     </HStack>
                     <HStack spacing={1}>
-                      <MapPin size={isSmall ? 10 : 12} color="gray" />
-                      <Text fontSize={isSmall ? "2xs" : "2xs"} color={isDark ? "gray.400" : "gray.600"}>
+                      <MapPin size={isSmall ? 10 : 12} color={isDark ? "gray" : "gray.600"} />
+                      <Text fontSize={isSmall ? "2xs" : "2xs"} color={isDark ? "gray.400" : "gray.700"}>
                         {item.audienceRegion}
                       </Text>
                     </HStack>
@@ -790,7 +793,7 @@ const ModernContentHistory = ({
                     <Box>
                       <Text
                         fontSize={isSmall ? "2xs" : "xs"}
-                        color={isDark ? "gray.400" : "gray.600"}
+                        color={isDark ? "gray.400" : "gray.700"}
                         noOfLines={isSmall ? 2 : 3}
                         lineHeight="1.4"
                       >
@@ -803,8 +806,8 @@ const ModernContentHistory = ({
                   <HStack justify="space-between" w="full" pt={isSmall ? 1 : 2}>
                     <HStack spacing={isSmall ? 2 : 3}>
                       <HStack spacing={1}>
-                        <FileText size={isSmall ? 10 : 12} color="gray" />
-                        <Text fontSize={isSmall ? "2xs" : "2xs"} color={isDark ? "gray.400" : "gray.500"}>
+                        <FileText size={isSmall ? 10 : 12} color={isDark ? "gray" : "gray.600"} />
+                        <Text fontSize={isSmall ? "2xs" : "2xs"} color={isDark ? "gray.400" : "gray.700"}>
                           {item.generatedContent?.length || 0} chars
                         </Text>
                       </HStack>
@@ -941,10 +944,10 @@ const ModernContentHistory = ({
       <VStack spacing={4} mb={6}>
         <HStack justify="space-between" w="full">
           <VStack align="start" spacing={1}>
-            <Text fontSize="xl" fontWeight="bold" color={isDark ? "gray.100" : "gray.800"}>
+            <Text fontSize="xl" fontWeight="bold" color={isDark ? "gray.100" : "black"}>
               Content History
             </Text>
-            <Text fontSize="sm" color={isDark ? "gray.300" : "gray.600"}>
+            <Text fontSize="sm" color={isDark ? "gray.300" : "black"}>
               {contentHistory.length} items • {filteredAndSortedHistory.length} shown
               {selectedIds.length > 0 && ` • ${selectedIds.length} selected`}
               {shouldUseVirtualGrid && (
@@ -979,7 +982,8 @@ const ModernContentHistory = ({
                 icon={<Grid2x2 size={16} />}
                 size="sm"
                 variant={viewDensity === 'small' ? 'solid' : 'ghost'}
-                colorScheme={viewDensity === 'small' ? 'blue' : 'gray'}
+                colorScheme={viewDensity === 'small' ? 'blue' : 'blackAlpha'}
+                color={viewDensity === 'small' ? undefined : (isDark ? 'gray.300' : 'black')}
                 onClick={() => setViewDensity('small')}
                 aria-label="Small grid view"
               />
@@ -989,7 +993,8 @@ const ModernContentHistory = ({
                 icon={<Grid3x3 size={16} />}
                 size="sm"
                 variant={viewDensity === 'large' ? 'solid' : 'ghost'}
-                colorScheme={viewDensity === 'large' ? 'blue' : 'gray'}
+                colorScheme={viewDensity === 'large' ? 'blue' : 'blackAlpha'}
+                color={viewDensity === 'large' ? undefined : (isDark ? 'gray.300' : 'black')}
                 onClick={() => setViewDensity('large')}
                 aria-label="Large grid view"
               />
@@ -999,7 +1004,8 @@ const ModernContentHistory = ({
                 icon={<List size={16} />}
                 size="sm"
                 variant={viewDensity === 'list' ? 'solid' : 'ghost'}
-                colorScheme={viewDensity === 'list' ? 'blue' : 'gray'}
+                colorScheme={viewDensity === 'list' ? 'blue' : 'blackAlpha'}
+                color={viewDensity === 'list' ? undefined : (isDark ? 'gray.300' : 'black')}
                 onClick={() => setViewDensity('list')}
                 aria-label="List view"
               />
@@ -1011,17 +1017,17 @@ const ModernContentHistory = ({
         <HStack w="full" spacing={4}>
           <InputGroup flex="1">
             <InputLeftElement pointerEvents="none">
-              <Search size={16} color="gray" />
+              <Search size={16} color={isDark ? "gray" : "black"} />
             </InputLeftElement>
             <Input
               placeholder="Search content, audience, or keywords..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               bg={isDark ? "gray.700" : "white"}
-              color={isDark ? "gray.100" : "gray.800"}
+              color={isDark ? "gray.100" : "gray.900"}
               border="2px solid"
               borderColor={isDark ? "gray.600" : "gray.200"}
-              _placeholder={{ color: isDark ? "gray.400" : "gray.500" }}
+              _placeholder={{ color: isDark ? "gray.400" : "gray.900" }}
               _focus={{
                 borderColor: 'blue.400',
                 boxShadow: isDark 
@@ -1036,7 +1042,7 @@ const ModernContentHistory = ({
             onChange={(e) => setFilterBy(e.target.value)}
             maxW="150px"
             bg={isDark ? "gray.700" : "white"}
-            color={isDark ? "gray.100" : "gray.800"}
+            color={isDark ? "gray.100" : "gray.900"}
             border="2px solid"
             borderColor={isDark ? "gray.600" : "gray.200"}
           >
@@ -1051,7 +1057,7 @@ const ModernContentHistory = ({
             onChange={(e) => setSortBy(e.target.value)}
             maxW="150px"
             bg={isDark ? "gray.700" : "white"}
-            color={isDark ? "gray.100" : "gray.800"}
+            color={isDark ? "gray.100" : "gray.900"}
             border="2px solid"
             borderColor={isDark ? "gray.600" : "gray.200"}
           >
@@ -1079,12 +1085,13 @@ const ModernContentHistory = ({
               textAlign="center"
               height="200px"
               rounded="xl"
+              color={isDark ? undefined : "black"}
             >
               <AlertIcon boxSize="40px" mr={0} />
-              <AlertTitle mt={4} mb={1} fontSize="lg">
+              <AlertTitle mt={4} mb={1} fontSize="lg" color={isDark ? undefined : "black"}>
                 {searchTerm ? 'No matching content found' : 'No content generated yet'}
               </AlertTitle>
-              <AlertDescription maxWidth="sm">
+              <AlertDescription maxWidth="sm" color={isDark ? undefined : "black"}>
                 {searchTerm 
                   ? 'Try adjusting your search terms or filters'
                   : 'Your generated content will appear here. Create your first educational content to get started!'
@@ -1139,7 +1146,7 @@ const ModernContentHistory = ({
               top={2} 
               right={2} 
               fontSize="xs" 
-              color="gray.500"
+              color={isDark ? "gray.500" : "black"}
               bg="white"
               px={2}
               py={1}
@@ -1230,7 +1237,7 @@ const ModernContentHistory = ({
           >
             <VStack spacing={3}>
               <HStack justify="space-between" w="full">
-                <Text fontSize="sm" fontWeight="medium" color={isDark ? "gray.200" : "gray.700"}>
+                <Text fontSize="sm" fontWeight="medium" color={isDark ? "gray.200" : "gray.900"}>
                   {selectedIds.length} item{selectedIds.length === 1 ? '' : 's'} selected
                 </Text>
                 <IconButton
@@ -1245,7 +1252,7 @@ const ModernContentHistory = ({
               {isBulkDeleting && (
                 <Box w="full">
                   <Progress value={bulkDeleteProgress} size="sm" colorScheme="red" />
-                  <Text fontSize="xs" color={isDark ? "gray.400" : "gray.500"} mt={1}>
+                  <Text fontSize="xs" color={isDark ? "gray.400" : "gray.700"} mt={1}>
                     Deleting... {Math.round(bulkDeleteProgress)}%
                   </Text>
                 </Box>

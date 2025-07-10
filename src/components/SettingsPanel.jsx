@@ -93,6 +93,9 @@ const SettingsPanel = ({ isOpen, onClose }) => {
     localStorage.getItem('ecc-auto-generate') === 'true'
   );
 
+  // Determine if current theme is dark
+  const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
   const accentColors = [
     { name: 'Blue', value: 'blue', color: '#3B82F6' },
     { name: 'Purple', value: 'purple', color: '#8B5CF6' },
@@ -242,7 +245,7 @@ const SettingsPanel = ({ isOpen, onClose }) => {
                             flex="1"
                           />
                         </HStack>
-                        <Text fontSize="xs" color="gray.500" textAlign="center">
+                        <Text fontSize="xs" color={isDark ? "gray.500" : "black"} textAlign="center">
                           {theme === 'system' ? 'Follows system preference' : `${theme} theme`}
                         </Text>
                       </VStack>
@@ -287,7 +290,7 @@ const SettingsPanel = ({ isOpen, onClose }) => {
                       <Box>
                         <HStack justify="space-between" mb={2}>
                           <Text fontWeight="medium">Font Size</Text>
-                          <Text fontSize="sm" color="gray.500">{fontSize}px</Text>
+                          <Text fontSize="sm" color={isDark ? "gray.500" : "black"}>{fontSize}px</Text>
                         </HStack>
                         <Slider
                           value={fontSize}
@@ -307,7 +310,7 @@ const SettingsPanel = ({ isOpen, onClose }) => {
                       <HStack justify="space-between">
                         <VStack align="start" spacing={1}>
                           <Text fontWeight="medium">High Contrast</Text>
-                          <Text fontSize="sm" color="gray.500">Enhanced visibility</Text>
+                          <Text fontSize="sm" color={isDark ? "gray.500" : "black"}>Enhanced visibility</Text>
                         </VStack>
                         <Switch
                           isChecked={highContrast}
@@ -321,7 +324,7 @@ const SettingsPanel = ({ isOpen, onClose }) => {
                       <HStack justify="space-between">
                         <VStack align="start" spacing={1}>
                           <Text fontWeight="medium">Reduced Motion</Text>
-                          <Text fontSize="sm" color="gray.500">Minimize animations</Text>
+                          <Text fontSize="sm" color={isDark ? "gray.500" : "black"}>Minimize animations</Text>
                         </VStack>
                         <Switch
                           isChecked={reducedMotion}
@@ -336,7 +339,7 @@ const SettingsPanel = ({ isOpen, onClose }) => {
                             {soundEffects ? <Volume2 size={16} /> : <VolumeX size={16} />}
                             <Text fontWeight="medium">Sound Effects</Text>
                           </HStack>
-                          <Text fontSize="sm" color="gray.500">Audio feedback</Text>
+                          <Text fontSize="sm" color={isDark ? "gray.500" : "black"}>Audio feedback</Text>
                         </VStack>
                         <Switch
                           isChecked={soundEffects}
@@ -364,7 +367,7 @@ const SettingsPanel = ({ isOpen, onClose }) => {
                       <HStack justify="space-between">
                         <VStack align="start" spacing={1}>
                           <Text fontWeight="medium">Smooth Animations</Text>
-                          <Text fontSize="sm" color="gray.500">Enhanced visual effects</Text>
+                          <Text fontSize="sm" color={isDark ? "gray.500" : "gray.700"}>Enhanced visual effects</Text>
                         </VStack>
                         <Switch
                           isChecked={animations}
@@ -376,7 +379,7 @@ const SettingsPanel = ({ isOpen, onClose }) => {
                       <HStack justify="space-between">
                         <VStack align="start" spacing={1}>
                           <Text fontWeight="medium">Auto Save</Text>
-                          <Text fontSize="sm" color="gray.500">Save drafts automatically</Text>
+                          <Text fontSize="sm" color={isDark ? "gray.500" : "gray.700"}>Save drafts automatically</Text>
                         </VStack>
                         <Switch
                           isChecked={autoSave}
@@ -390,7 +393,7 @@ const SettingsPanel = ({ isOpen, onClose }) => {
                       <HStack justify="space-between">
                         <VStack align="start" spacing={1}>
                           <Text fontWeight="medium">Virtual Scrolling</Text>
-                          <Text fontSize="sm" color="gray.500">Optimize large lists</Text>
+                          <Text fontSize="sm" color={isDark ? "gray.500" : "gray.700"}>Optimize large lists</Text>
                         </VStack>
                         <Switch
                           isChecked={virtualScrolling}
