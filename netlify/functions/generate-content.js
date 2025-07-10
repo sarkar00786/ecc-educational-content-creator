@@ -42,7 +42,18 @@ exports.handler = async (event, context) => {
       };
     }
     
-    const message = contents[contents.length - 1].parts[0].text;
+    // Extract message and clean up format for Gemini API
+    const lastMessage = contents[contents.length - 1];
+    const message = lastMessage.parts[0].text;
+    
+    // Create properly formatted contents for Gemini API (remove role field)
+    const cleanedContents = contents.map(item => ({
+      parts: item.parts
+    }));
+    
+    console.log('Original contents:', JSON.stringify(contents, null, 2));
+    console.log('Cleaned contents:', JSON.stringify(cleanedContents, null, 2));
+    console.log('Message length:', message.length);
     
     // Call Gemini API directly using fetch
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
@@ -53,9 +64,7 @@ exports.handler = async (event, context) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        contents: [{
-          parts: [{ text: message }]
-        }]
+        contents: cleanedContents
       })
     });
     
