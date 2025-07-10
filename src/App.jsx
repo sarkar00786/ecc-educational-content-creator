@@ -95,7 +95,13 @@ if (typeof __app_id !== 'undefined') {
 } else if (firebaseConfig?.appId) {
   appId = firebaseConfig.appId;
 } else {
-  console.error("❌ App ID is missing. Please check Firebase config or __app_id.");
+toast({
+  title: "App ID Missing",
+  description: "Please check Firebase config or __app_id.",
+  status: "error",
+  duration: 5000,
+  isClosable: true,
+});
   // Fallback to a default if __app_id is not available and no appId in config
   appId = 'default-app-id';
 }
@@ -267,7 +273,6 @@ const App = () => {
   // --- Firebase Auth Init ---
   useEffect(() => {
     if (!firebaseApp) {
-      console.log("Firebase Config received by App:", firebaseConfig);
       firebaseApp = initializeApp(firebaseConfig);
       auth = getAuth(firebaseApp);
       db = getFirestore(firebaseApp);
@@ -279,7 +284,13 @@ const App = () => {
           await signInWithCustomToken(auth, initialAuthToken);
         }
       } catch (err) {
-        console.error("Firebase initial sign-in error:", err);
+toast({
+  title: "Initial Sign-In Error",
+  description: err.message,
+  status: "error",
+  duration: 5000,
+  isClosable: true,
+});
         // Only show error if it's not a common auth error
         if (err.code !== 'auth/invalid-custom-token' && err.code !== 'auth/custom-token-mismatch') {
           toast({
@@ -298,7 +309,6 @@ const App = () => {
     signInUser();
 
     const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
-      console.log("Auth state changed:", currentUser ? 'User logged in' : 'User logged out');
       setUser(currentUser);
       
       if (currentUser) {
@@ -340,7 +350,13 @@ const App = () => {
       history.sort((a, b) => (b.timestamp?.toDate() || 0) - (a.timestamp?.toDate() || 0));
       setContentHistory(history);
     }, (err) => {
-      console.error("📛 Firestore listener error:", err);
+toast({
+  title: "Firestore Listener Error",
+  description: err.message,
+  status: "error",
+  duration: 5000,
+  isClosable: true,
+});
       toast({
         title: "Firestore Error",
         description: `Failed to load history: ${err.message}`,
@@ -395,7 +411,13 @@ const App = () => {
       }
       setAuthMode('app');
     } catch (err) {
-      console.error("Auth error:", err);
+toast({
+  title: "Authentication Error",
+  description: err.message,
+  status: "error",
+  duration: 5000,
+  isClosable: true,
+});
       let msg = `Authentication failed: ${err.message}`;
       if (err.code === 'auth/operation-not-allowed') {
         msg += " (Enable Email/Password auth in Firebase)";
@@ -481,7 +503,6 @@ const App = () => {
       } catch (popupError) {
         // If popup is blocked or closed, try redirect method
         if (popupError.code === 'auth/popup-blocked' || popupError.code === 'auth/popup-closed-by-user') {
-          console.log('Popup blocked or closed, showing user-friendly message');
           toast({
             title: "Popup Blocked or Closed",
             description: "Please allow popups for this site and try again, or use email/password login.",
@@ -624,7 +645,6 @@ const App = () => {
         // Check if error is retryable (503 overloaded, 429 rate limit, or server errors)
         if ((response.status === 503 || response.status === 429 || response.status === 500) && retryCount < maxRetries) {
           const delay = (retryCount + 1) * 5000; // 5s, 10s delays
-          console.log(`API issue detected, retrying in ${delay}ms... (attempt ${retryCount + 1}/${maxRetries})`);
           
           // Show user-friendly retry message
           toast({
@@ -669,7 +689,13 @@ const App = () => {
         return callGeminiAPI(chatHistory, retryCount + 1);
       }
       
-      console.error("Error in callGeminiAPI:", fetchError);
+toast({
+  title: "API Call Error",
+  description: fetchError.message,
+  status: "error",
+  duration: 5000,
+  isClosable: true,
+});
       throw fetchError;
     }
   };
@@ -832,7 +858,13 @@ Answer: William Shakespeare\n---QUIZ_END---`;
       });
 
     } catch (err) {
-      console.error('Error generating content:', err);
+toast({
+  title: "Content Generation Error",
+  description: err.message,
+  status: "error",
+  duration: 5000,
+  isClosable: true,
+});
       toast({
         title: "Content Generation Failed",
         description: `${err.message}. Please ensure you are logged in and have sufficient usage limits.`,

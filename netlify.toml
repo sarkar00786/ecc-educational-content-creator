@@ -5,6 +5,10 @@
 [build.environment]
   NODE_VERSION = "20"
 
+[functions]
+  # Increase timeout from 10s default to 26s (max for free tier)
+  timeout = 26
+
 [[headers]]
   for = "/*"
   [headers.values]
