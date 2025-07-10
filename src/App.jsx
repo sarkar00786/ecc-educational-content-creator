@@ -606,12 +606,10 @@ const App = () => {
    * @param {Array} chatHistory - The conversation history/payload for the LLM.
    * @returns {Promise<string>} - The text response from the LLM.
    */
-  const callGeminiAPI = async (chatHistory) => {
-    // In a real production environment with server-side API key management,
-    // you would typically call your own backend endpoint like this:
-    const apiUrl = '/.netlify/functions/generate-content'; // THIS IS THE CORRECT ENDPOINT FOR YOUR NETLIFY FUNCTION
-
-    const payload = { contents: chatHistory }; // Corrected: payload key should be 'contents' for the Netlify Function as per generate-content.js
+  const callGeminiAPI = async (chatHistory, retryCount = 0) => {
+    const apiUrl = '/.netlify/functions/generate-content';
+    const payload = { contents: chatHistory };
+    const maxRetries = 2;
 
     try {
       const response = await fetch(apiUrl, {
@@ -622,8 +620,27 @@ const App = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        // Feature 20: Enhanced error message from Netlify Function
-        throw new Error(`API error from Netlify Function: ${response.status} - ${errorData.details || errorData.error || errorData.message || 'Unknown error'}`);
+        
+        // Check if error is retryable (503 overloaded, 429 rate limit)
+        if ((response.status === 503 || response.status === 429) && retryCount < maxRetries) {
+          const delay = (retryCount + 1) * 3000; // 3s, 6s delays
+          console.log(`API overloaded, retrying in ${delay}ms... (attempt ${retryCount + 1}/${maxRetries})`);
+          
+          // Show user-friendly retry message
+          toast({
+            title: "AI Service Busy",
+            description: `The AI is currently busy. Retrying in ${delay/1000} seconds... (${retryCount + 1}/${maxRetries})`,
+            status: "info",
+            duration: delay - 500,
+            isClosable: true,
+          });
+          
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return callGeminiAPI(chatHistory, retryCount + 1);
+        }
+        
+        // Enhanced error message from Netlify Function
+        throw new Error(`API error from Netlify Function: ${response.status} - ${errorData.error || errorData.details || errorData.message || 'Unknown error'}`);
       }
 
       const result = await response.json();
@@ -635,8 +652,25 @@ const App = () => {
         throw new Error('Failed to get content from API. Unexpected response structure.');
       }
     } catch (fetchError) {
+      // If it's a network error and we haven't exhausted retries, try again
+      if (fetchError.name === 'TypeError' && retryCount < maxRetries) {
+        const delay = (retryCount + 1) * 2000;
+        console.log(`Network error, retrying in ${delay}ms...`);
+        
+        toast({
+          title: "Connection Issue",
+          description: `Network error. Retrying in ${delay/1000} seconds...`,
+          status: "warning",
+          duration: delay - 500,
+          isClosable: true,
+        });
+        
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return callGeminiAPI(chatHistory, retryCount + 1);
+      }
+      
       console.error("Error in callGeminiAPI:", fetchError);
-      throw fetchError; // Re-throw to be caught by handleGenerateContent
+      throw fetchError;
     }
   };
 
