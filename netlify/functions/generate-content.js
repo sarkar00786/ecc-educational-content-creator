@@ -62,6 +62,44 @@ exports.handler = async (event, context) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Gemini API error:', response.status, errorText);
+      
+      // If Gemini is overloaded (503), provide a fallback response
+      if (response.status === 503 && errorText.includes('overloaded')) {
+        const fallbackContent = `I apologize, but the AI service is currently experiencing high demand. Here's a basic educational outline for your topic:
+
+**Topic: ${message.substring(0, 100)}...**
+
+1. **Introduction**
+   - Brief overview of the subject
+   - Why this topic is important for ${message.includes('Grade') ? 'students at this level' : 'learners'}
+
+2. **Key Concepts**
+   - Main ideas and principles
+   - Important terminology
+   - Real-world examples
+
+3. **Learning Activities**
+   - Discussion questions
+   - Simple exercises or experiments
+   - Ways to explore the topic further
+
+4. **Summary**
+   - Review of main points
+   - Connection to broader concepts
+   - Next steps for learning
+
+*Note: This is a temporary response while our AI service is busy. Please try again in a few minutes for a more detailed, customized educational content.*`;
+        
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({ 
+            generatedContent: fallbackContent,
+            isFallback: true
+          })
+        };
+      }
+      
       return {
         statusCode: response.status,
         headers,
