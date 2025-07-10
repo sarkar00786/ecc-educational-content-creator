@@ -37,7 +37,9 @@ const ModernHeader = ({
   onLogout, 
   contentHistory, 
   isGenerating = false,
-  generationProgress = 0 
+  generationProgress = 0,
+  onProfileClick,
+  onPreferencesClick 
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
 
@@ -51,6 +53,22 @@ const ModernHeader = ({
   const handleNotificationClick = () => {
     setShowNotifications(!showNotifications);
     alert("🔔 Notifications: No new notifications");
+  };
+
+  const handleProfileClick = () => {
+    if (onProfileClick) {
+      onProfileClick();
+    } else {
+      alert('👤 Profile Settings: Feature coming soon!');
+    }
+  };
+
+  const handlePreferencesClick = () => {
+    if (onPreferencesClick) {
+      onPreferencesClick();
+    } else {
+      alert('⚙️ Preferences: Feature coming soon!');
+    }
   };
 
   return (
@@ -130,7 +148,7 @@ const ModernHeader = ({
                       AI Creating...
                     </Text>
                     <Text fontSize="xs" opacity={0.8}>
-                      {generationProgress}%
+                      {Math.round(generationProgress)}%
                     </Text>
                   </Box>
                 </motion.div>
@@ -243,6 +261,7 @@ const ModernHeader = ({
                       justifyContent="flex-start"
                       rounded="md"
                       _hover={{ bg: 'blue.50' }}
+                      onClick={handleProfileClick}
                       size="sm"
                       color="gray.700"
                     >
@@ -254,6 +273,7 @@ const ModernHeader = ({
                       justifyContent="flex-start"
                       rounded="md"
                       _hover={{ bg: 'blue.50' }}
+                      onClick={handlePreferencesClick}
                       size="sm"
                       color="gray.700"
                     >
@@ -299,6 +319,9 @@ const ModernHeader = ({
                 isAnimated
                 hasStripe
               />
+              <Text fontSize="xs" color="purple.600" mt={2} textAlign="center">
+                🤖 AI is thinking... {Math.round(generationProgress)}%
+              </Text>
             </Box>
           </motion.div>
         )}

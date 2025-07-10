@@ -578,8 +578,32 @@ const ModernContentGenerator = ({
   };
 
   return (
-    <Card bg="white" shadow="xl" rounded="2xl" overflow="hidden">
-      <CardHeader bg="linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%)" pb={6}>
+    <Card 
+      bg="rgba(255, 255, 255, 0.95)" 
+      shadow="2xl" 
+      rounded="2xl" 
+      overflow="hidden"
+      backdropFilter="blur(10px)"
+      border="1px solid"
+      borderColor="purple.200"
+      position="relative"
+      _before={{
+        content: '""',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '4px',
+        bg: 'linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+        zIndex: 1
+      }}
+    >
+      <CardHeader 
+        bg="linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)" 
+        pb={6}
+        position="relative"
+        zIndex={2}
+      >
         {/* Progress Steps */}
         <VStack spacing={4}>
           <HStack justify="space-between" w="full" maxW="500px">
@@ -589,7 +613,10 @@ const ModernContentGenerator = ({
                   w="40px"
                   h="40px"
                   rounded="full"
-                  bg={index <= currentStep ? 'purple.500' : 'gray.200'}
+                  bg={index <= currentStep 
+                    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
+                    : 'gray.200'
+                  }
                   color={index <= currentStep ? 'white' : 'gray.500'}
                   display="flex"
                   alignItems="center"
@@ -597,6 +624,10 @@ const ModernContentGenerator = ({
                   transition="all 0.3s"
                   cursor={index < currentStep ? 'pointer' : 'default'}
                   onClick={() => index < currentStep && setCurrentStep(index)}
+                  _hover={index < currentStep ? {
+                    transform: 'scale(1.1)',
+                    shadow: 'lg'
+                  } : {}}
                 >
                   {index < currentStep ? (
                     <CheckCircle size={20} />

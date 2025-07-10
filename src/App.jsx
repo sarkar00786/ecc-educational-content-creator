@@ -259,6 +259,9 @@ const App = () => {
   const [contentHistory, setContentHistory] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [feedbackText, setFeedbackText] = useState('');
+  
+  // --- Dynamic Progress Animation ---
+  const [generationProgress, setGenerationProgress] = useState(0);
 
   // --- Content Naming & Renaming ---
   const [currentContentId, setCurrentContentId] = useState(null);
@@ -269,6 +272,40 @@ const App = () => {
   const [quizzes, setQuizzes] = useState([]);
   const [quizAnswers, setQuizAnswers] = useState({});
   const [quizFeedback, setQuizFeedback] = useState({});
+
+  // --- Progress Animation Effect ---
+  useEffect(() => {
+    let progressInterval;
+    
+    if (isLoading) {
+      // Reset progress to 0 when starting
+      setGenerationProgress(0);
+      
+      // Start progressive animation
+      progressInterval = setInterval(() => {
+        setGenerationProgress(prev => {
+          if (prev >= 95) {
+            // Stop at 95% and wait for actual completion
+            return prev;
+          }
+          // Random increment between 2-10%
+          const increment = Math.random() * 8 + 2;
+          return Math.min(prev + increment, 95);
+        });
+      }, 400); // Update every 400ms
+    } else {
+      // Complete to 100% when loading finishes
+      if (generationProgress > 0) {
+        setGenerationProgress(100);
+        // Reset after a brief delay
+        setTimeout(() => setGenerationProgress(0), 1000);
+      }
+    }
+    
+    return () => {
+      if (progressInterval) clearInterval(progressInterval);
+    };
+  }, [isLoading, generationProgress]);
 
   // --- Firebase Auth Init ---
   useEffect(() => {
@@ -618,6 +655,28 @@ toast({
         isClosable: true,
       });
     }
+  };
+
+  // Profile Settings Handler
+  const handleProfileSettings = () => {
+    toast({
+      title: "👤 Profile Settings",
+      description: "Profile management feature coming soon! This will include avatar updates, display name changes, and account settings.",
+      status: "info",
+      duration: 4000,
+      isClosable: true,
+    });
+  };
+
+  // Preferences Handler
+  const handlePreferences = () => {
+    toast({
+      title: "⚙️ User Preferences",
+      description: "Preferences panel coming soon! This will include theme settings, default generation options, and personalization features.",
+      status: "info",
+      duration: 4000,
+      isClosable: true,
+    });
   };
 
   /**
@@ -1334,15 +1393,33 @@ toast({
 
   // --- Main Application UI (Logged In State) ---
   return (
-    <Box minH="100vh" bg="linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%)">
+    <Box 
+      minH="100vh" 
+      bg="linear-gradient(135deg, #667eea 0%, #764ba2 20%, #f093fb 50%, #f5f7fa 100%)"
+      position="relative"
+      _before={{
+        content: '""',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        bg: 'rgba(255, 255, 255, 0.9)',
+        zIndex: 0
+      }}
+    >
       {/* Modern Header */}
-      <ModernHeader
-        user={user}
-        onLogout={handleLogout}
-        contentHistory={contentHistory}
-        isGenerating={isLoading}
-        generationProgress={isLoading ? 45 : 0} // You can make this dynamic
-      />
+      <Box position="relative" zIndex={1}>
+        <ModernHeader
+          user={user}
+          onLogout={handleLogout}
+          contentHistory={contentHistory}
+          isGenerating={isLoading}
+          generationProgress={generationProgress}
+          onProfileClick={handleProfileSettings}
+          onPreferencesClick={handlePreferences}
+        />
+      </Box>
 
       {/* Notifications */}
       <AnimatePresence>
@@ -1359,7 +1436,7 @@ toast({
       {/* Routes for public viewing */}
       <Routes>
         <Route path="/" element={
-          <Box maxW="8xl" mx="auto" p={6}>
+          <Box maxW="8xl" mx="auto" p={6} position="relative" zIndex={1}>
             <Grid templateColumns={{ base: '1fr', lg: '1fr 1fr' }} gap={8}>
               <GridItem>
                 <ModernContentGenerator
