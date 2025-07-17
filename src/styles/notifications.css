@@ -1,0 +1,295 @@
+/**
+ * Enhanced Notification System - Micro-animations
+ * 
+ * This CSS file provides smooth, performant animations for the 
+ * enhanced notification system with proper fallbacks and accessibility.
+ */
+
+/* Base notification animations */
+@keyframes notification-slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes notification-slide-out-right {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes notification-bounce-gentle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes notification-shake-subtle {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-2px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(2px);
+  }
+}
+
+@keyframes notification-pulse-gentle {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+@keyframes notification-celebration-bounce {
+  0%, 100% {
+    transform: scale(1) translateY(0);
+  }
+  25% {
+    transform: scale(1.05) translateY(-5px);
+  }
+  50% {
+    transform: scale(1.02) translateY(-2px);
+  }
+  75% {
+    transform: scale(1.05) translateY(-3px);
+  }
+}
+
+/* Icon animations */
+@keyframes checkmark-animate {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes error-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes warning-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 rgba(251, 191, 36, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.6);
+  }
+}
+
+@keyframes info-fade {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes star-sparkle {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    transform: scale(1.2) rotate(90deg);
+  }
+  50% {
+    transform: scale(1.1) rotate(180deg);
+  }
+  75% {
+    transform: scale(1.2) rotate(270deg);
+  }
+}
+
+/* Notification classes */
+.notification-enter-bounce-gentle {
+  animation: notification-bounce-gentle 0.3s ease-out;
+}
+
+.notification-enter-shake-subtle {
+  animation: notification-shake-subtle 0.4s ease-out;
+}
+
+.notification-enter-pulse-gentle {
+  animation: notification-pulse-gentle 0.3s ease-out;
+}
+
+.notification-enter-slide-smooth {
+  animation: notification-slide-in-right 0.3s ease-out;
+}
+
+.notification-enter-celebration-bounce {
+  animation: notification-celebration-bounce 0.6s ease-out;
+}
+
+.notification-exit {
+  animation: notification-slide-out-right 0.3s ease-in;
+}
+
+/* Icon animation classes */
+.icon-checkmark-animate {
+  animation: checkmark-animate 0.3s ease-out;
+}
+
+.icon-error-pulse {
+  animation: error-pulse 0.5s ease-in-out infinite;
+}
+
+.icon-warning-glow {
+  animation: warning-glow 1s ease-in-out infinite;
+}
+
+.icon-info-fade {
+  animation: info-fade 0.3s ease-out;
+}
+
+.icon-star-sparkle {
+  animation: star-sparkle 1s ease-in-out infinite;
+}
+
+/* Accessibility - Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .notification-enter-bounce-gentle,
+  .notification-enter-shake-subtle,
+  .notification-enter-pulse-gentle,
+  .notification-enter-celebration-bounce {
+    animation: notification-slide-in-right 0.2s ease-out;
+  }
+  
+  .icon-checkmark-animate,
+  .icon-error-pulse,
+  .icon-warning-glow,
+  .icon-info-fade,
+  .icon-star-sparkle {
+    animation: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .notification-enter-bounce-gentle,
+  .notification-enter-shake-subtle,
+  .notification-enter-pulse-gentle,
+  .notification-enter-slide-smooth,
+  .notification-enter-celebration-bounce {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Notification positioning helpers */
+.notification-stack-offset-0 {
+  top: 20px;
+}
+
+.notification-stack-offset-1 {
+  top: 90px;
+}
+
+.notification-stack-offset-2 {
+  top: 160px;
+}
+
+.notification-stack-offset-3 {
+  top: 230px;
+}
+
+.notification-stack-offset-4 {
+  top: 300px;
+}
+
+/* Z-index management */
+.notification-z-1000 {
+  z-index: 1000;
+}
+
+.notification-z-999 {
+  z-index: 999;
+}
+
+.notification-z-998 {
+  z-index: 998;
+}
+
+.notification-z-997 {
+  z-index: 997;
+}
+
+.notification-z-996 {
+  z-index: 996;
+}
+
+/* Particle effect container for achievements */
+.notification-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.notification-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: gold;
+  border-radius: 50%;
+  animation: particle-float 2s ease-out forwards;
+}
+
+@keyframes particle-float {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .notification-particle {
+    background: #fbbf24;
+  }
+}
+
+/* Print styles - hide notifications when printing */
+@media print {
+  .notification-enter-bounce-gentle,
+  .notification-enter-shake-subtle,
+  .notification-enter-pulse-gentle,
+  .notification-enter-slide-smooth,
+  .notification-enter-celebration-bounce {
+    display: none !important;
+  }
+}

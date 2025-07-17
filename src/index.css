@@ -24,8 +24,6 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
 }
@@ -66,3 +64,341 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Educational PRO Color Scheme */
+:root {
+  /* Primary PRO Colors - Educational Focus */
+  --pro-primary: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%); /* Purple to Teal */
+  --pro-primary-hover: linear-gradient(135deg, #7c3aed 0%, #0891b2 100%);
+  --pro-primary-active: linear-gradient(135deg, #6d28d9 0%, #0e7490 100%);
+  
+  /* Secondary PRO Colors */
+  --pro-secondary: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%); /* Purple to Blue */
+  --pro-secondary-hover: linear-gradient(135deg, #9333ea 0%, #2563eb 100%);
+  
+  /* Background Gradients */
+  --pro-background: linear-gradient(135deg, #f3f4f6 0%, #e0f2fe 100%); /* Light gray to light blue */
+  --pro-background-soft: linear-gradient(135deg, #faf5ff 0%, #f0f9ff 100%); /* Very light purple to blue */
+  
+  /* Dark Mode Colors */
+  --pro-primary-dark: linear-gradient(135deg, #a855f7 0%, #22d3ee 100%);
+  --pro-background-dark: linear-gradient(135deg, #581c87 0%, #164e63 100%);
+  
+  /* Accent Colors */
+  --pro-accent-purple: #8b5cf6;
+  --pro-accent-teal: #06b6d4;
+  --pro-accent-blue: #3b82f6;
+  
+  /* Text Colors */
+  --pro-text-primary: #1e293b;
+  --pro-text-secondary: #475569;
+  --pro-text-light: #64748b;
+}
+
+/* Educational PRO Component Styles */
+.pro-gradient-primary {
+  background: var(--pro-primary);
+}
+
+.pro-gradient-primary:hover {
+  background: var(--pro-primary-hover);
+}
+
+.pro-gradient-secondary {
+  background: var(--pro-secondary);
+}
+
+.pro-gradient-secondary:hover {
+  background: var(--pro-secondary-hover);
+}
+
+.pro-background-soft {
+  background: var(--pro-background-soft);
+}
+
+.pro-text-gradient {
+  background: var(--pro-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Dark mode support */
+.dark .pro-gradient-primary {
+  background: var(--pro-primary-dark);
+}
+
+.dark .pro-background-soft {
+  background: var(--pro-background-dark);
+}
+
+/* Global Placeholder Styling */
+input::placeholder, textarea::placeholder {
+  color: #9ca3af;
+  font-size: 0.875em;
+}
+
+.dark input::placeholder, .dark textarea::placeholder {
+  color: #6b7280;
+}
+
+/* Enhanced responsive design and accessibility */
+
+/* Custom animations for better UX */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.6s ease-out;
+}
+
+.animate-slide-down {
+  animation: slideDown 0.4s ease-out;
+}
+
+.animate-pulse-custom {
+  animation: pulse 2s infinite;
+}
+
+/* Enhanced focus states for accessibility */
+*:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Improved button focus states */
+button:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+/* Theme transition improvements */
+.dark {
+  color-scheme: dark;
+}
+
+/* Smooth theme transitions */
+* {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Skip animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* Improved scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* Loading states */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+/* Error states */
+.error-border {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.success-border {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+/* Responsive text sizing */
+@media (max-width: 640px) {
+  .responsive-text {
+    font-size: 0.875rem;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  button {
+    border: 2px solid currentColor;
+  }
+  
+  .card {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Canva-like Branding Utilities */
+.brand-gradient {
+  background: linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(262, 83%, 58%) 100%);
+}
+
+.brand-gradient-hover:hover {
+  background: linear-gradient(135deg, hsl(217, 91%, 65%) 0%, hsl(262, 83%, 63%) 100%);
+}
+
+.brand-text-gradient {
+  background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brand-shadow {
+  box-shadow: 
+    0 8px 25px rgba(59, 130, 246, 0.3), 
+    0 4px 10px rgba(139, 92, 246, 0.2);
+}
+
+.brand-shadow-hover:hover {
+  box-shadow: 
+    0 12px 35px rgba(59, 130, 246, 0.4), 
+    0 6px 15px rgba(139, 92, 246, 0.3);
+}
+
+/* Step icons animations */
+@keyframes iconPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.icon-pulse:hover {
+  animation: iconPulse 1s ease-in-out infinite;
+}
+
+/* Sparkle pulse animation for when ready to generate */
+@keyframes sparkle-pulse {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.7; 
+    transform: scale(1.1);
+  }
+}
+
+.animate-pulse-sparkle {
+  animation: sparkle-pulse 1.5s ease-in-out infinite;
+}
+
+/* Gradient button states */
+.btn-gradient {
+  background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+  transition: all 0.3s ease;
+}
+
+.btn-gradient:hover {
+  background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.25);
+}
+
+.btn-gradient:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.25);
+}
+
+/* Remove outline from branding/home button */
+.branding-button {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.branding-button:focus,
+.branding-button:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.branding-button:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+

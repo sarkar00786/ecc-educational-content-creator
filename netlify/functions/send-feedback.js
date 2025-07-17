@@ -10,10 +10,10 @@ exports.handler = async (event) => {
 
   const { email, message } = JSON.parse(event.body || '{}');
 
-  if (!message) {
+  if (!message || message.trim().length < 10) {
     return {
       statusCode: 400,
-      body: JSON.stringify({ error: 'Message is required.' }),
+      body: JSON.stringify({ error: 'Message must be at least 10 characters long.' }),
     };
   }
 
