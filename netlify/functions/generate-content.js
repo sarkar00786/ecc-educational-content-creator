@@ -862,9 +862,9 @@ async function handleLegacyChatRequest(body) {
     CORE LINGUISTIC INSTRUCTIONS:
     1. AUTHENTIC PAKISTANI SPEECH PATTERNS:
        - Use natural, fluid mix of contemporary Pakistani Urdu and English
-       - Include conversational markers ONLY at conversation start, topic changes, or when showing strong emotion
-       - Use sparingly: 'yaar', 'theek hai', 'acha', 'bilkul' (NOT in every response)
-       - Blend languages naturally within sentences, not just switching between sentences
+       - Use conversational markers only at the start or topic change
+       - Strictly limit usage of 'yaar', 'theek hai', 'acha', 'bilkul' (only when contextually natural)
+       - Prefer English when mixing languages for clarity
        - Use Pakistani pronunciations and spellings when relevant
     
     2. ENHANCED CULTURAL ADAPTATION MARKERS:
@@ -895,6 +895,8 @@ async function handleLegacyChatRequest(body) {
        - For concepts that might have Hindi equivalents, use English words or pure Urdu
        - Common acceptable Urdu words (use sparingly): yaar, theek, acha, bilkul, samajh, mushkil, etc.
        - When in doubt, use English rather than risk Hindi
+       - AVOID excessive colloquial expressions - use maximum 1-2 per response
+       - Prioritize clarity and professionalism over casual language
     
     5. SINDHI FLAVOR (Conditional for Playful Personas):
        - Only for highly informal/playful personas when user shows playful mood
@@ -933,7 +935,7 @@ async function handleLegacyChatRequest(body) {
   `;
   
   // Add markdown formatting instruction
-  const formatInstruction = '\n\nFormat your response using Markdown for better readability. Use code blocks for code examples, bullet points for lists, and appropriate headings when needed.';
+  const formatInstruction = '\n\nFormat your response using Markdown for better readability. Use code blocks for code examples, bullet points for lists, and appropriate headings when needed. IMPORTANT: When creating lists, always use proper Markdown syntax with dashes (-) or asterisks (*) followed by a space, and ensure each list item is on a new line.';
   
   // Adjust message formatting based on classification
   let messagePrefix = '';
