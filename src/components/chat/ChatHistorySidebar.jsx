@@ -9,15 +9,9 @@ const ChatHistorySidebar = React.memo(({
   onSelectChat, 
   currentChatId, 
   onNewChat, 
-  // onDeleteChat, 
-  // onArchiveChat, 
-  // onPinChat,
   onError,
   onSuccess,
   onChatHistoryChange,
-  // onToggleSidebar,
-  // isMobile,
-  // sidebarWidth = 256
 }) => {
   const [chatHistoryList, setChatHistoryList] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -363,7 +357,7 @@ const ChatHistorySidebar = React.memo(({
       </div>
     </div>
   );
-};
+});
 
 ChatHistorySidebar.displayName = 'ChatHistorySidebar';
 

@@ -211,32 +211,6 @@ const QuotaIndicator = React.memo(({
         })}
       </div>
       
-      {/* File Size Information */}
-      {totalFileSize > 0 && (
-        <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-900 dark:text-white">
-              Total File Size
-            </span>
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              {(totalFileSize / (1024 * 1024)).toFixed(1)} MB / 10 MB
-            </span>
-          </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-2">
-            <div 
-              className={`h-2 rounded-full transition-all duration-300 ${
-                totalFileSize >= CHAT_LIMITS.MAX_FILE_SIZE * 0.9 
-                  ? 'bg-red-500' 
-                  : totalFileSize >= CHAT_LIMITS.MAX_FILE_SIZE * 0.7 
-                  ? 'bg-orange-500' 
-                  : 'bg-blue-500'
-              }`}
-              style={{ width: `${Math.min((totalFileSize / CHAT_LIMITS.MAX_FILE_SIZE) * 100, 100)}%` }}
-            />
-          </div>
-        </div>
-      )}
-      
       {/* Smart Suggestions */}
       <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
         <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Smart Tips</h4>
@@ -275,7 +249,7 @@ const QuotaIndicator = React.memo(({
       </div>
     </div>
   );
-};
+});
 
 QuotaIndicator.displayName = 'QuotaIndicator';
 

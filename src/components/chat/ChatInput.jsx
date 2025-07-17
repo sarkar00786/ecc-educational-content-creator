@@ -199,157 +199,92 @@ const ChatInput = React.memo(({
         
         // Store the message and files before sending
         setSentMessage(value);
-        setSentFiles([...selectedFiles]);
-        setIsSending(true);
-        
-        // Clear the input immediately
+        setSentFiles(selectedFiles);
+
+        // Clear input
         onChange('');
         setSelectedFiles([]);
-        setIsUserTyping(false);
-        
-        // Send the message
+
+        // Call onSend
         onSend(value, selectedFiles);
-        
-        // The sending state will be reset from the parent component
-        // when the message is fully processed
-        
-        // Maintain focus after sending
-        setTimeout(() => {
-          if (textareaRef.current) {
-            textareaRef.current.focus();
-          }
-        }, 100);
-      } else {
-        console.log('ChatInput: onSend not called - conditions not met', { 
-          hasValue: !!value.trim(), 
-          hasFiles: selectedFiles.length > 0,
-          disabled, 
-          hasOnSend: !!onSend 
-        });
+
+        // Inform user that message is sending
+        setIsSending(true);
+
+        return;
       }
+    }
+
+    // Persist typing state if user interacts with input
+    if (!isUserTyping) {
+      setIsUserTyping(true);
     }
   };
 
-  const handleSendClick = (e) => {
-    console.log('ChatInput: handleSendClick called', { value, disabled, onSend: typeof onSend });
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (effectiveIsSending) {
-      // If currently sending, pause/cancel the message
-      handlePauseMessage();
-      return;
-    }
-    
-    if ((value.trim() || selectedFiles.length > 0) && !disabled && onSend) {
-      console.log('ChatInput: Calling onSend with value and files:', value, selectedFiles);
-      
-      // Store the message and files before sending
-      setSentMessage(value);
-      setSentFiles([...selectedFiles]);
-      setIsSending(true);
-      
-      // Clear the input immediately
-      onChange('');
-      setSelectedFiles([]);
-      setIsUserTyping(false);
-      
-      // Send the message
-      onSend(value, selectedFiles);
-      
-      // The sending state will be reset from the parent component
-      // when the message is fully processed
-      
-      // Maintain focus after sending
-      setTimeout(() => {
-        if (textareaRef.current) {
-          textareaRef.current.focus();
-        }
-      }, 100);
-    } else {
-      console.log('ChatInput: onSend not called - conditions not met', { 
-        hasValue: !!value.trim(), 
-        hasFiles: selectedFiles.length > 0,
-        disabled, 
-        hasOnSend: !!onSend 
-      });
-    }
-  };
-  
   const handlePauseMessage = () => {
     console.log('ChatInput: handlePauseMessage called');
-    
-    // Return the message to the input field
-    onChange(sentMessage);
-    setSelectedFiles([...sentFiles]);
-    
-    // Reset sending state
-    setIsSending(false);
-    setSentMessage('');
-    setSentFiles([]);
-    
-    // Call the parent's pause handler if provided
-    if (onPauseMessage) {
+    if (onPauseMessage && effectiveIsSending) {
       onPauseMessage();
+    } else {
+      setIsSending(false);
+      setSentMessage('');
+      setSentFiles([]);
     }
-    
-    // Focus back on the textarea
-    setTimeout(() => {
-      if (textareaRef.current) {
-        textareaRef.current.focus();
-      }
-    }, 100);
   };
 
-  const handleVoiceClick = (e) => {
-    console.log('ChatInput: handleVoiceClick called', { isVoiceSupported, onVoiceToggle: typeof onVoiceToggle });
-    e.preventDefault();
-    e.stopPropagation();
-    if (isVoiceSupported && onVoiceToggle) {
-      console.log('ChatInput: Calling onVoiceToggle');
+  const handleVoiceClick = () => {
+    if (onVoiceToggle) {
       onVoiceToggle();
-    } else {
-      console.log('ChatInput: onVoiceToggle not called - conditions not met', { 
-        isVoiceSupported, 
-        hasOnVoiceToggle: !!onVoiceToggle 
-      });
+    }
+  };
+
+  const handleValueChange = (e) => {
+    onChange(e.target.value);
+  };
+
+  const handleSendClick = () => {
+    if (effectiveIsSending) {
+      handlePauseMessage();
+    } else if ((value.trim() || selectedFiles.length > 0) && !disabled && onSend) {
+      // Store the message and files before sending
+      setSentMessage(value);
+      setSentFiles(selectedFiles);
+
+      // Clear input
+      onChange('');
+      setSelectedFiles([]);
+
+      // Call onSend
+      onSend(value, selectedFiles);
+
+      // Inform user that message is sending
+      setIsSending(true);
     }
   };
 
   return (
-    <div className={`relative ${className}`}>
-      <div className={`
-        flex items-end bg-white dark:bg-gray-800 border-2 rounded-3xl
-        transition-all duration-200 ease-in-out
-        border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500
-        ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
-      `}>
-        {/* Main input area */}
-        <div className="flex-1 flex items-end">
+    <div className="flex flex-col space-y-2">
+      <div 
+        className={`flex flex-col p-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm ${className}`}
+      >
+        {/* Textarea */}
+        <div className="relative">
           <textarea
             ref={textareaRef}
             value={value}
-            onChange={(e) => {
-              onChange(e.target.value);
-              setIsUserTyping(true);
-              setShouldMaintainFocus(true);
-            }}
+            onChange={handleValueChange}
             onKeyDown={handleKeyDown}
             onFocus={() => {
               setIsFocused(true);
               setShouldMaintainFocus(true);
             }}
-            onBlur={(e) => {
-              // Only lose focus if clicking outside the input area
-              const relatedTarget = e.relatedTarget;
-              if (!relatedTarget || !e.currentTarget.parentElement.contains(relatedTarget)) {
-                setIsFocused(false);
-                setShouldMaintainFocus(false);
-              }
+            onBlur={() => {
+              setIsFocused(false);
+              setShouldMaintainFocus(false);
             }}
             placeholder={placeholder}
             disabled={disabled}
-className={`
+            className={`
               w-full px-4 py-3 bg-transparent text-gray-900 dark:text-white 
               placeholder-gray-500 dark:placeholder-gray-400 
               resize-none border-none outline-none
@@ -439,11 +374,11 @@ className={`
           </button>
         </div>
       </div>
-
     </div>
   );
-};
+});
 
 ChatInput.displayName = 'ChatInput';
 
 export default ChatInput;
+
