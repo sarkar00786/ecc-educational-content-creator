@@ -95,8 +95,8 @@ const ChatInput = React.memo(({
       
       // Calculate the new height
       const scrollHeight = textarea.scrollHeight;
-      const minHeight = 44; // Single line height
-      const maxHeight = 200; // Maximum height before scroll
+      const minHeight = 36; // Single line height
+      const maxHeight = 150; // Maximum height before scroll
       
       // Set the height within bounds
       const newHeight = Math.min(Math.max(scrollHeight, minHeight), maxHeight);
@@ -285,12 +285,12 @@ const ChatInput = React.memo(({
             placeholder={placeholder}
             disabled={disabled}
             className={`
-              w-full px-4 py-3 bg-transparent text-gray-900 dark:text-white 
+              w-full px-3 py-2 bg-transparent text-gray-900 dark:text-white 
               placeholder-gray-500 dark:placeholder-gray-400 
               resize-none border-none outline-none
               focus:outline-none focus:shadow-none
-              text-base leading-6
-              min-h-[44px] max-h-[200px]
+              text-sm leading-5
+              min-h-[36px] max-h-[150px]
               ${disabled ? 'cursor-not-allowed' : ''}
             `}
             style={{
@@ -302,76 +302,78 @@ const ChatInput = React.memo(({
           />
         </div>
 
-        {/* File and Image upload */}
-        <div className="flex items-center space-x-2 px-2 pb-2">
-          <input
-            type="file"
-            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
-            multiple
-            onChange={handleFileInputChange}
-            className="hidden"
-            id="file-upload"
-          />
-          <label htmlFor="file-upload" className="p-2 rounded-full transition-all duration-200 transform hover:scale-105 cursor-pointer text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600">
-            <Paperclip className="w-5 h-5" />
-          </label>
-          {selectedFiles.map((file, index) => (
-            <div key={index} className="flex items-center space-x-1">
-              <span className="text-sm">{file.name}</span>
-              <button onClick={() => handleRemoveFile(index)} className="p-1">
-                <X className="w-4 h-4 text-red-500" />
+{/* File and Image upload and controls in a single row */}
+        <div className="flex items-center justify-between space-x-2 px-2 pb-2">
+          <div className="flex items-center space-x-2">
+            <input
+              type="file"
+              accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+              multiple
+              onChange={handleFileInputChange}
+              className="hidden"
+              id="file-upload"
+            />
+            <label htmlFor="file-upload" className="p-2 rounded-full transition-all duration-200 transform hover:scale-105 cursor-pointer text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600">
+              <Paperclip className="w-5 h-5" />
+            </label>
+            {selectedFiles.map((file, index) => (
+              <div key={index} className="flex items-center space-x-1">
+                <span className="text-sm">{file.name}</span>
+                <button onClick={() => handleRemoveFile(index)} className="p-1">
+                  <X className="w-4 h-4 text-red-500" />
+                </button>
+              </div>
+            ))}
+          </div>
+          
+          {/* Action buttons on the right */}
+          <div className="flex items-center space-x-2">
+            {/* Voice button */}
+            {isVoiceSupported && (
+              <button
+                onClick={handleVoiceClick}
+                disabled={disabled}
+                className={`
+                  p-2 rounded-full transition-all duration-200 transform hover:scale-105
+                  disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
+                  ${isVoiceListening 
+                    ? 'bg-red-500 hover:bg-red-600 text-white shadow-lg animate-pulse' 
+                    : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300'
+                  }
+                `}
+                title={isVoiceListening ? 'Stop voice input' : 'Start voice input'}
+              >
+                {isVoiceListening ? (
+                  <MicOff className="w-5 h-5" />
+                ) : (
+                  <Mic className="w-5 h-5" />
+                )}
               </button>
-            </div>
-          ))}
-        </div>
+            )}
 
-        {/* Action buttons */}
-        <div className="flex items-center space-x-2 px-2 pb-2">
-          {/* Voice button */}
-          {isVoiceSupported && (
+            {/* Send/Pause button */}
             <button
-              onClick={handleVoiceClick}
-              disabled={disabled}
+              onClick={handleSendClick}
+              disabled={(!value.trim() && selectedFiles.length === 0 && !effectiveIsSending) || disabled}
               className={`
                 p-2 rounded-full transition-all duration-200 transform hover:scale-105
                 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
-                ${isVoiceListening 
-                  ? 'bg-red-500 hover:bg-red-600 text-white shadow-lg animate-pulse' 
-                  : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300'
+                ${effectiveIsSending
+                  ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-lg animate-pulse'
+                  : (value.trim() || selectedFiles.length > 0) && !disabled
+                  ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500'
                 }
               `}
-              title={isVoiceListening ? 'Stop voice input' : 'Start voice input'}
+              title={effectiveIsSending ? "Pause message" : "Send message"}
             >
-              {isVoiceListening ? (
-                <MicOff className="w-5 h-5" />
+              {effectiveIsSending ? (
+                <Pause className="w-5 h-5" />
               ) : (
-                <Mic className="w-5 h-5" />
+                <Send className="w-5 h-5" />
               )}
             </button>
-          )}
-
-          {/* Send/Pause button */}
-          <button
-            onClick={handleSendClick}
-            disabled={(!value.trim() && selectedFiles.length === 0 && !effectiveIsSending) || disabled}
-            className={`
-              p-2 rounded-full transition-all duration-200 transform hover:scale-105
-              disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
-              ${effectiveIsSending
-                ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-lg animate-pulse'
-                : (value.trim() || selectedFiles.length > 0) && !disabled
-                ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500'
-              }
-            `}
-            title={effectiveIsSending ? "Pause message" : "Send message"}
-          >
-            {effectiveIsSending ? (
-              <Pause className="w-5 h-5" />
-            ) : (
-              <Send className="w-5 h-5" />
-            )}
-          </button>
+          </div>
         </div>
       </div>
     </div>

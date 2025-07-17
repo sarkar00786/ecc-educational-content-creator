@@ -239,12 +239,12 @@ const ChatWindow = ({ user, db, currentChatId, onError, onSuccess, chatHistoryLi
   const scrollToShowUserMessage = useCallback(() => {
     if (messagesContainerRef.current) {
       const container = messagesContainerRef.current;
-      const headerHeight = 120; // Approximate header height
+      const headerHeight = 60; // Reduced header height for better spacing
       const bannerHeight = linkedContentForChat ? 48 : 0;
       const totalHeaderHeight = headerHeight + bannerHeight;
-      
-      // Scroll to show user message just under the header
-      container.scrollTop = container.scrollHeight - container.clientHeight + totalHeaderHeight;
+
+      // Scroll to place the first message above the input area
+      container.scrollTop = container.scrollHeight - container.clientHeight + totalHeaderHeight - 20;
     }
   }, [linkedContentForChat]);
 
@@ -1418,8 +1418,8 @@ chatDispatch({ type: 'SET_LINKED_CHATS', payload: updatedLinkedChats });
         className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 dark:scrollbar-thumb-gray-600 dark:scrollbar-track-gray-800"
         style={{ 
           // Dynamic padding to account for fixed header and input area
-          paddingTop: (linkedContentForChat ? 1 : 0) * 48 + 120 + 'px', // 48px for banner, 120px for header. Adjust as needed.
-          paddingBottom: '100px', // Space for the fixed input area
+          paddingTop: (linkedContentForChat ? 1 : 0) * 48 + 60 + 'px', // Reduced header space
+          paddingBottom: '80px', // Less space for input area adjusted
           scrollBehavior: 'smooth' // Smooth scrolling behavior
         }}
       >

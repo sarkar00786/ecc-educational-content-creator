@@ -7,6 +7,9 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AIzaSyAxxAWhx_HPhRclzaQ7RB
 // Initialize the Google Generative AI client
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
+// Initial greeting control
+const hasInitialGreetingOccurred = new Set();
+
 // Enhanced Context optimization utilities with advanced features
 class ContextOptimizer {
   constructor() {
@@ -83,7 +86,7 @@ class ContextOptimizer {
     const messageAge = Date.now() - new Date(message.timestamp).getTime();
     const recentBoost = messageAge < 300000 ? 0.2 : messageAge < 900000 ? 0.1 : 0; // 5min/15min thresholds
     
-    const userBoost = message.role === 'user' ? 0.15 : 0;
+let userBoost = message.role === 'user' ? 0.15 : 0;
     const lengthBoost = message.text.length > 100 ? 0.1 : 0; // Longer messages might have more context
     
     const finalScore = Math.min(1, baseScore + semanticWeight + recentBoost + userBoost + lengthBoost);
@@ -945,7 +948,14 @@ async function handleLegacyChatRequest(body) {
     messagePrefix = 'Current question: ';
   }
   
-  const modifiedMessage = `${baseInstruction}${contextInstruction}${culturalPromptingSystem}${formatInstruction}\n\n${messagePrefix}${lastUserMessage}`;
+  // Add initial greeting logic for the first message of a new chat session
+  let finalUserMessage = lastUserMessage;
+  if (chatHistory.length <= 2 && messageClassification.intent === 'GREETING_CASUAL') {
+    // This is likely the first message of a new chat session
+    finalUserMessage = `Assalamu Alaikum! ${lastUserMessage}`;
+  }
+  
+  const modifiedMessage = `${baseInstruction}${contextInstruction}${culturalPromptingSystem}${formatInstruction}\n\n${messagePrefix}${finalUserMessage}`;
   
   console.log('Generated prompt:', modifiedMessage); // For debugging
 
