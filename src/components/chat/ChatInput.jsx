@@ -264,11 +264,25 @@ const ChatInput = React.memo(({
 
   return (
     <div className="flex flex-col space-y-2">
+      {/* Selected Files Display */}
+      {selectedFiles.length > 0 && (
+        <div className="flex flex-wrap gap-2 px-2">
+          {selectedFiles.map((file, index) => (
+            <div key={index} className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-700 rounded-full px-3 py-1">
+              <span className="text-sm text-gray-700 dark:text-gray-300 truncate max-w-32">{file.name}</span>
+              <button onClick={() => handleRemoveFile(index)} className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full">
+                <X className="w-3 h-3 text-red-500" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      
       <div 
-        className={`flex flex-col p-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm ${className}`}
+        className={`flex items-center p-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm ${className}`}
       >
-        {/* Textarea */}
-        <div className="relative">
+        {/* Textarea Container */}
+        <div className="flex-1 relative">
           <textarea
             ref={textareaRef}
             value={value}
@@ -285,7 +299,7 @@ const ChatInput = React.memo(({
             placeholder={placeholder}
             disabled={disabled}
             className={`
-              w-full px-3 py-2 bg-transparent text-gray-900 dark:text-white 
+              w-full px-3 py-2 pr-32 bg-transparent text-gray-900 dark:text-white 
               placeholder-gray-500 dark:placeholder-gray-400 
               resize-none border-none outline-none
               focus:outline-none focus:shadow-none
@@ -300,41 +314,31 @@ const ChatInput = React.memo(({
             }}
             rows={1}
           />
-        </div>
-
-{/* File and Image upload and controls in a single row */}
-        <div className="flex items-center justify-between space-x-2 px-2 pb-2">
-          <div className="flex items-center space-x-2">
-            <input
-              type="file"
-              accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
-              multiple
-              onChange={handleFileInputChange}
-              className="hidden"
-              id="file-upload"
-            />
-            <label htmlFor="file-upload" className="p-2 rounded-full transition-all duration-200 transform hover:scale-105 cursor-pointer text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600">
-              <Paperclip className="w-5 h-5" />
-            </label>
-            {selectedFiles.map((file, index) => (
-              <div key={index} className="flex items-center space-x-1">
-                <span className="text-sm">{file.name}</span>
-                <button onClick={() => handleRemoveFile(index)} className="p-1">
-                  <X className="w-4 h-4 text-red-500" />
-                </button>
-              </div>
-            ))}
-          </div>
           
-          {/* Action buttons on the right */}
-          <div className="flex items-center space-x-2">
+          {/* Action buttons positioned absolutely at the right side of textarea */}
+          <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+            {/* File upload button */}
+            <div className="flex items-center">
+              <input
+                type="file"
+                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                multiple
+                onChange={handleFileInputChange}
+                className="hidden"
+                id="file-upload"
+              />
+              <label htmlFor="file-upload" className="p-1.5 rounded-full transition-all duration-200 transform hover:scale-105 cursor-pointer text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600">
+                <Paperclip className="w-4 h-4" />
+              </label>
+            </div>
+            
             {/* Voice button */}
             {isVoiceSupported && (
               <button
                 onClick={handleVoiceClick}
                 disabled={disabled}
                 className={`
-                  p-2 rounded-full transition-all duration-200 transform hover:scale-105
+                  p-1.5 rounded-full transition-all duration-200 transform hover:scale-105
                   disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
                   ${isVoiceListening 
                     ? 'bg-red-500 hover:bg-red-600 text-white shadow-lg animate-pulse' 
@@ -344,9 +348,9 @@ const ChatInput = React.memo(({
                 title={isVoiceListening ? 'Stop voice input' : 'Start voice input'}
               >
                 {isVoiceListening ? (
-                  <MicOff className="w-5 h-5" />
+                  <MicOff className="w-4 h-4" />
                 ) : (
-                  <Mic className="w-5 h-5" />
+                  <Mic className="w-4 h-4" />
                 )}
               </button>
             )}
@@ -356,7 +360,7 @@ const ChatInput = React.memo(({
               onClick={handleSendClick}
               disabled={(!value.trim() && selectedFiles.length === 0 && !effectiveIsSending) || disabled}
               className={`
-                p-2 rounded-full transition-all duration-200 transform hover:scale-105
+                p-1.5 rounded-full transition-all duration-200 transform hover:scale-105
                 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
                 ${effectiveIsSending
                   ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-lg animate-pulse'
@@ -368,9 +372,9 @@ const ChatInput = React.memo(({
               title={effectiveIsSending ? "Pause message" : "Send message"}
             >
               {effectiveIsSending ? (
-                <Pause className="w-5 h-5" />
+                <Pause className="w-4 h-4" />
               ) : (
-                <Send className="w-5 h-5" />
+                <Send className="w-4 h-4" />
               )}
             </button>
           </div>

@@ -122,6 +122,7 @@ const ChatWindow = ({ user, db, currentChatId, onError, onSuccess, chatHistoryLi
   const [sendingController, setSendingController] = useState(null);
   const [pendingUserMessage, setPendingUserMessage] = useState(null);
   const [shouldScrollToBottom, setShouldScrollToBottom] = useState(false);
+  const [scrollDebounceTimer, setScrollDebounceTimer] = useState(null);
 
   // Initialize personalization system
   const userMemory = useMemo(() => {
@@ -140,47 +141,20 @@ const ChatWindow = ({ user, db, currentChatId, onError, onSuccess, chatHistoryLi
   // App ID for Firestore paths
   const appId = 'ecc-app-ab284';
 
-  // Intelligent persona selection based on context - optimized to prevent excessive re-renders
+  // Intelligent persona selection based on context - TEMPORARILY DISABLED FOR TESTING
   const selectPersonaBasedOnContext = useCallback((userMessage, userState, currentSubject) => {
-    // Import persona analysis and blending - moved to dynamic import
-    // const { analyzePersonaForMessage, blendPersonaCharacteristics } = require('../../utils/aiPersonas');
+    // DISABLED: Let's test the message classifier without persona interference
+    console.log('🧪 PERSONA SYSTEM TEMPORARILY DISABLED');
+    console.log('📊 Message Classifier Analysis:', {
+      userMessage,
+      userState,
+      currentSubject,
+      messageLength: userMessage?.length || 0,
+      detectedPatterns: 'Check console for detailed analysis'
+    });
     
-    try {
-      // Analyze the message for persona recommendations
-      const analysis = analyzePersonaForMessage(userMessage, {
-        userState,
-        currentSubject,
-        conversationHistory: chatState.messages,
-        userPreferences: userMemory?.userPreferences || {}
-      });
-      
-      // Select the best persona based on analysis
-      const selectedPersona = analysis.recommendedPersona || 'Educator';
-      
-      // Update the persona if it's different from current
-      if (selectedPersona !== chatState.aiPersona) {
-        console.log(`Auto-selecting persona: ${selectedPersona} based on context analysis`);
-        chatDispatch({ type: 'SET_AI_PERSONA', payload: selectedPersona });
-        
-        // Update Firestore with the new persona - use setTimeout to prevent blocking
-        if (currentChatId && user && db) {
-          setTimeout(() => {
-            const chatRef = doc(db, `artifacts/${appId}/users/${user.uid}/chats`, currentChatId);
-            updateDoc(chatRef, {
-              aiPersona: selectedPersona,
-              lastUpdated: serverTimestamp()
-            }).catch(error => {
-              console.error('Error updating persona in Firestore:', error);
-            });
-          }, 0);
-        }
-      }
-      
-      return selectedPersona;
-    } catch (error) {
-      console.error('Error in persona selection:', error);
-      return chatState.aiPersona || 'Educator';
-    }
+    // Always return a neutral persona for testing
+    return 'Educator';
   }, [chatState.aiPersona, userMemory?.userPreferences, currentChatId, user, db]); // Removed chatState.messages to prevent frequent re-creation
 
   // Memoized function to get styling for AI personas using external config
@@ -221,16 +195,33 @@ const ChatWindow = ({ user, db, currentChatId, onError, onSuccess, chatHistoryLi
     };
   }, [currentChatId, currentChat, canPerformAction, isGeneralMode]);
 
-  // Scrolls the chat messages to the bottom
-  const scrollToBottom = useCallback(() => {
-    if (messagesEndRef.current) {
+  // Scrolls the chat messages to the bottom instantly
+  const scrollToBottomInstant = useCallback(() => {
+    if (messagesContainerRef.current) {
       // Use requestAnimationFrame to ensure DOM is updated
       requestAnimationFrame(() => {
-        messagesEndRef.current?.scrollIntoView({ 
-          behavior: "smooth", 
-          block: "end",
-          inline: "nearest"
-        });
+        const container = messagesContainerRef.current;
+        if (container) {
+          // Scroll to the very bottom of the container
+          container.scrollTop = container.scrollHeight;
+        }
+      });
+    }
+  }, []);
+  
+  // Scrolls the chat messages to the bottom smoothly
+  const scrollToBottom = useCallback(() => {
+    if (messagesContainerRef.current) {
+      // Use requestAnimationFrame to ensure DOM is updated
+      requestAnimationFrame(() => {
+        const container = messagesContainerRef.current;
+        if (container) {
+          // Smooth scroll to the very bottom of the container
+          container.scrollTo({
+            top: container.scrollHeight,
+            behavior: 'smooth'
+          });
+        }
       });
     }
   }, []);
@@ -244,23 +235,36 @@ const ChatWindow = ({ user, db, currentChatId, onError, onSuccess, chatHistoryLi
       const totalHeaderHeight = headerHeight + bannerHeight;
 
       // Scroll to place the first message above the input area
-      container.scrollTop = container.scrollHeight - container.clientHeight + totalHeaderHeight - 20;
+      requestAnimationFrame(() => {
+        container.scrollTop = container.scrollHeight - container.clientHeight + totalHeaderHeight - 20;
+      });
     }
   }, [linkedContentForChat]);
 
-  // Check if the user is scrolled to the bottom
+  // Check if the user is scrolled to the bottom with larger tolerance
   const checkIfScrolledToBottom = useCallback(() => {
     if (messagesContainerRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
-      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10; // 10px tolerance
+      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 50; // 50px tolerance for better UX
       setIsScrolledToBottom(isAtBottom);
     }
   }, []);
 
+  // Debounced scroll handler to prevent excessive scroll checks
+  const debouncedScrollHandler = useCallback(() => {
+    if (scrollDebounceTimer) {
+      clearTimeout(scrollDebounceTimer);
+    }
+    const timer = setTimeout(() => {
+      checkIfScrolledToBottom();
+    }, 100);
+    setScrollDebounceTimer(timer);
+  }, [checkIfScrolledToBottom, scrollDebounceTimer]);
+
   // Handle scroll events
   const handleScroll = useCallback(() => {
-    checkIfScrolledToBottom();
-  }, [checkIfScrolledToBottom]);
+    debouncedScrollHandler();
+  }, [debouncedScrollHandler]);
 
   // Effect to add scroll listener
   useEffect(() => {
@@ -271,27 +275,63 @@ const ChatWindow = ({ user, db, currentChatId, onError, onSuccess, chatHistoryLi
     }
   }, [handleScroll]);
 
-  // Effect to handle scrolling behavior - only scroll when user is at bottom
+  // Effect to handle scrolling behavior - enhanced for better message tracking
   useEffect(() => {
     if (chatState.messages.length === 0) return;
     
-    // Only auto-scroll if user is already at the bottom
-    if (isScrolledToBottom) {
-      const lastMessage = chatState.messages[chatState.messages.length - 1];
-      
-      if (lastMessage && lastMessage.role === 'user') {
-        // For user messages, show them under the header immediately
+    // Get the last message
+    const lastMessage = chatState.messages[chatState.messages.length - 1];
+    
+    // Always scroll to bottom for new messages
+    if (lastMessage) {
+      // For user messages, instantly scroll to bottom
+      if (lastMessage.role === 'user') {
+        // Use immediate scrolling with multiple attempts to ensure it works
         requestAnimationFrame(() => {
-          scrollToShowUserMessage();
+          scrollToBottomInstant();
+          // Double check with another frame
+          requestAnimationFrame(() => {
+            scrollToBottomInstant();
+          });
         });
-      } else if (lastMessage && lastMessage.role === 'model') {
-        // For AI messages, scroll to bottom to show the response
+      } else if (lastMessage.role === 'model') {
+        // For AI messages, always scroll to bottom (smooth scrolling)
         requestAnimationFrame(() => {
           scrollToBottom();
+          // Double check with another frame for AI messages too
+          requestAnimationFrame(() => {
+            scrollToBottom();
+          });
         });
       }
     }
-  }, [chatState.messages.length, isScrolledToBottom]); // Reduced dependencies to only length
+  }, [chatState.messages.length, chatState.messages, scrollToBottom, scrollToBottomInstant]);
+  
+  // Additional effect to force scroll on new messages
+  useEffect(() => {
+    if (chatState.messages.length > 0) {
+      // Force scroll to bottom when new messages arrive
+      const timer = setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [chatState.messages.length, scrollToBottom]);
+  
+  // Additional effect to ensure scroll after DOM updates
+  useEffect(() => {
+    if (chatState.messages.length > 0) {
+      // Multiple attempts to ensure proper scrolling
+      const timers = [
+        setTimeout(() => scrollToBottom(), 50),
+        setTimeout(() => scrollToBottom(), 150),
+        setTimeout(() => scrollToBottom(), 300)
+      ];
+      
+      return () => timers.forEach(timer => clearTimeout(timer));
+    }
+  }, [chatState.messages, scrollToBottom]);
   
   // Effect for forced scrolling when needed
   useEffect(() => {
@@ -547,18 +587,44 @@ const handleSendMessage = useCallback(async (text, files = []) => {
         chatDispatch({ type: 'ADD_MESSAGE', payload: userMessage });
       }
 
-      // Personalization system integration and intelligent persona selection
+      // Message Classification Analysis - TESTING WITHOUT PERSONA SYSTEM
       if (userMemory && interactionRecorder && personalizationEngine) {
         try {
           // Analyze user message to extract insights
           const messageAnalysis = await analyzeMessage(userMessage.text);
           
-          // Auto-select persona based on message context and user state
-          const selectedPersona = selectPersonaBasedOnContext(
-            userMessage.text,
-            messageAnalysis.userState?.state,
-            chatState.currentSubject
-          );
+          // 🧪 TESTING: Log detailed message classification results
+          console.log('🔍 DETAILED MESSAGE ANALYSIS:', {
+            originalMessage: userMessage.text,
+            intent: messageAnalysis.intent,
+            userState: messageAnalysis.userState,
+            sentiment: messageAnalysis.sentiment,
+            culturalContext: messageAnalysis.culturalContext,
+            entities: messageAnalysis.entities,
+            moodPatterns: messageAnalysis.moodPatterns,
+            stateTransition: messageAnalysis.stateTransition,
+            metadata: messageAnalysis.metadata
+          });
+          
+          // Show classification in a more readable format
+          console.log('📈 CLASSIFICATION SUMMARY:', {
+            '🎯 Intent': `${messageAnalysis.intent.intent} (${Math.round(messageAnalysis.intent.confidence * 100)}% confident)`,
+            '😊 User State': `${messageAnalysis.userState.state} (${Math.round(messageAnalysis.userState.confidence * 100)}% confident)`,
+            '💭 Sentiment': `${messageAnalysis.sentiment.sentiment} (${Math.round(messageAnalysis.sentiment.confidence * 100)}% confident)`,
+            '🌐 Cultural Context': messageAnalysis.culturalContext.isUrduEnglishMix ? 'Urdu-English Mix' : 'English',
+            '📊 Formality': messageAnalysis.culturalContext.formalityLevel,
+            '🔄 State Transition': messageAnalysis.stateTransition?.transition || 'none'
+          });
+          
+          // DISABLED: Auto-select persona based on message context and user state
+          // const selectedPersona = selectPersonaBasedOnContext(
+          //   userMessage.text,
+          //   messageAnalysis.userState?.state,
+          //   chatState.currentSubject
+          // );
+          
+          // Use default persona instead
+          const selectedPersona = 'Educator';
           
           // Record the interaction
           await interactionRecorder.recordInteraction({
@@ -599,14 +665,24 @@ const handleSendMessage = useCallback(async (text, files = []) => {
         return;
       }
 
-      // Send message to AI
+      // Send message to AI - USING NEUTRAL PERSONA FOR TESTING
       const payload = {
         contents: formatChatHistoryForAPI(optimizedContext.messages),
         currentSubject: chatState.currentSubject,
-        aiPersona: chatState.aiPersona,
+        aiPersona: 'Educator', // Fixed to Educator for testing
         linkedChatContexts: optimizedContext.linkedContexts,
+        linkedContent: chatState.linkedContent, // Include linked content
         requestType: 'generateContent'
       };
+      
+      console.log('🚀 SENDING TO AI:', {
+        subject: chatState.currentSubject,
+        persona: 'Educator (Fixed for testing)',
+        messageCount: optimizedContext.messages.length,
+        hasLinkedContext: optimizedContext.linkedContexts.length > 0,
+        hasLinkedContent: !!chatState.linkedContent,
+        linkedContentName: chatState.linkedContent?.name || 'None'
+      });
       const generatedContent = await callGeminiAPI(payload);
       
       // Check again if request was cancelled
@@ -1418,8 +1494,8 @@ chatDispatch({ type: 'SET_LINKED_CHATS', payload: updatedLinkedChats });
         className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200 dark:scrollbar-thumb-gray-600 dark:scrollbar-track-gray-800"
         style={{ 
           // Dynamic padding to account for fixed header and input area
-          paddingTop: (linkedContentForChat ? 1 : 0) * 48 + 60 + 'px', // Reduced header space
-          paddingBottom: '80px', // Less space for input area adjusted
+          paddingTop: (linkedContentForChat ? 1 : 0) * 48 + 120 + 'px', // Increased header space to avoid overlap
+          paddingBottom: '100px', // Adjusted space for input area to show last message right above input
           scrollBehavior: 'smooth' // Smooth scrolling behavior
         }}
       >
@@ -1626,7 +1702,7 @@ chatDispatch({ type: 'SET_LINKED_CHATS', payload: updatedLinkedChats });
           </div>
         )}
         
-        <div ref={messagesEndRef} /> {/* Scroll target for new messages */}
+        <div ref={messagesEndRef} style={{ height: '8px' }} /> {/* Scroll target for new messages with minimal spacing */}
       </div>
 
       {/* Chat Input Area - Fixed at bottom */}

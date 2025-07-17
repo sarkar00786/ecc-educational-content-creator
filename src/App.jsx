@@ -789,10 +789,11 @@ useEffect(() => {
         // Add session info for better context
         sessionId: user?.uid || 'anonymous',
         timestamp: new Date().toISOString(),
-        // Include currentSubject, aiPersona, linkedChatContexts if available
+        // Include currentSubject, aiPersona, linkedChatContexts, linkedContent if available
         currentSubject: data.currentSubject || null,
         aiPersona: data.aiPersona || null,
-        linkedChatContexts: data.linkedChatContexts || []
+        linkedChatContexts: data.linkedChatContexts || [],
+        linkedContent: data.linkedContent || null
       };
     } else {
       throw new Error('Invalid data format. Expected object or array.');

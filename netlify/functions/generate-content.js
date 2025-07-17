@@ -787,7 +787,7 @@ async function handleLegacyChatRequest(body) {
     responseInstruction = `
       The user is greeting you or testing the system with a simple conversational message.
       Respond warmly and naturally in a conversational manner, acknowledging their greeting.
-      Use Pakistani Urdu-English mixed conversational style if appropriate (e.g., "Hello! Kya haal hai? How are you?").
+      Use natural, professional language with minimal cultural expressions.
       Keep it brief and friendly, and then ask how you can help them today.
       Do not force the conversation toward the selected subject unless they specifically ask about it.
     `;
@@ -856,19 +856,53 @@ async function handleLegacyChatRequest(body) {
     // Continue without conviction layer if it fails
   }
   
+  // Function to get Pakistan Standard Time and appropriate greeting
+  function getPakistanTimeContext() {
+    const now = new Date();
+    // Pakistan Standard Time (PKT) is UTC+5
+    const pakistanTime = new Date(now.getTime() + (5 * 60 * 60 * 1000));
+    const hour = pakistanTime.getHours();
+    
+    let greeting = '';
+    if (hour >= 5 && hour < 12) {
+      greeting = 'Good morning';
+    } else if (hour >= 12 && hour < 17) {
+      greeting = 'Good afternoon';
+    } else if (hour >= 17 && hour < 21) {
+      greeting = 'Good evening';
+    } else {
+      greeting = 'Good night';
+    }
+    
+    return {
+      time: pakistanTime,
+      hour: hour,
+      greeting: greeting,
+      timeString: pakistanTime.toLocaleString('en-US', { timeZone: 'Asia/Karachi' })
+    };
+  }
+  
+  const timeContext = getPakistanTimeContext();
+  
   // Enhanced cultural prompting system with micro-pattern detection
   const culturalPromptingSystem = `
     CULTURAL AND LINGUISTIC INTELLIGENCE SYSTEM:
     
     PRIMARY LANGUAGE MODE: Pakistani Urdu-English Mixed Conversational Style
     
+    CURRENT TIME CONTEXT:
+    - Pakistan Standard Time: ${timeContext.timeString}
+    - Current Hour: ${timeContext.hour}
+    - Appropriate Greeting: ${timeContext.greeting}
+    - Only greet if this is the start of conversation or natural flow warrants it
+    
     CORE LINGUISTIC INSTRUCTIONS:
-    1. AUTHENTIC PAKISTANI SPEECH PATTERNS:
-       - Use natural, fluid mix of contemporary Pakistani Urdu and English
-       - Use conversational markers only at the start or topic change
-       - Strictly limit usage of 'yaar', 'theek hai', 'acha', 'bilkul' (only when contextually natural)
-       - Prefer English when mixing languages for clarity
-       - Use Pakistani pronunciations and spellings when relevant
+    1. NATURAL LANGUAGE ADAPTATION:
+       - Use primarily English with minimal, natural Urdu integration
+       - Only use common Urdu words when they feel genuinely natural (like 'samajh', 'theek')
+       - Avoid excessive casual expressions ('yaar', 'bilkul', 'acha') unless truly contextual
+       - Prioritize clarity and professionalism over cultural mixing
+       - Use respectful, educated tone suitable for learning environment
     
     2. ENHANCED CULTURAL ADAPTATION MARKERS:
        - User Intent: ${fullMessageAnalysis.intent.intent} (Confidence: ${fullMessageAnalysis.intent.confidence})
@@ -935,6 +969,31 @@ async function handleLegacyChatRequest(body) {
     
     PERSONA INTEGRATION:
     ${aiPersona ? `Current Active Persona: ${aiPersona} - Integrate persona characteristics naturally with cultural adaptation` : 'No specific persona - use balanced, supportive approach'}
+    
+    ENHANCED CONVERSATION FLOW INSTRUCTIONS:
+    - CRITICAL: Avoid repetitive assistance offers like "Is there anything else I can help you with?"
+    - Instead of offering generic help, provide specific, relevant questions or suggestions
+    - Use context-aware greetings. Greet at the start of a new conversation or when it feels natural in the flow
+    - Ensure greetings are time-sensitive, accurately reflecting the user's local time
+    - For farewells, use culturally appropriate expressions:
+      * "JazzakAllah!" (Thank you in Islamic context)
+      * "Pleasure is all mine!"
+      * "Khuda hafiz" (Goodbye in Urdu)
+      * "Take care!"
+      * "Until next time!"
+    - When ending responses, provide 2-3 specific follow-up questions related to the topic
+    - Make conversations feel natural and human-like, not robotic
+    - Use Pakistani cultural references and time-appropriate greetings when relevant
+
+    CONVERSATION ENDING STRATEGIES:
+    - Never end with generic "How can I help you?" or "Need any assistance?"
+    - Instead, offer specific, topic-related questions that encourage deeper exploration
+    - Examples:
+      * "What specific aspect of [topic] would you like to explore further?"
+      * "Have you encountered [related concept] before?"
+      * "Would you like to see some practical examples of [topic]?"
+      * "Any particular challenges you're facing with [topic]?"
+    - Use natural, conversational closers like "Hope this helps!" or "Let me know what you think!"
   `;
   
   // Add markdown formatting instruction
@@ -948,12 +1007,8 @@ async function handleLegacyChatRequest(body) {
     messagePrefix = 'Current question: ';
   }
   
-  // Add initial greeting logic for the first message of a new chat session
+  // Use the original user message without automatic greeting injection
   let finalUserMessage = lastUserMessage;
-  if (chatHistory.length <= 2 && messageClassification.intent === 'GREETING_CASUAL') {
-    // This is likely the first message of a new chat session
-    finalUserMessage = `Assalamu Alaikum! ${lastUserMessage}`;
-  }
   
   const modifiedMessage = `${baseInstruction}${contextInstruction}${culturalPromptingSystem}${formatInstruction}\n\n${messagePrefix}${finalUserMessage}`;
   
@@ -1109,7 +1164,12 @@ async function handleContentCreation({
       .replace(/\[audienceRegion\]/g, audienceRegion || '');
 
     const contentCreationPrompt = `
-    ROLE: You are a master educator and content designer with deep expertise in cognitive neuroscience, learning psychology, and pedagogical excellence. You specialize in creating educational content that leverages how the brain naturally learns and processes information.
+      ROLE: You are a master educator and content designer with deep expertise in cognitive neuroscience, learning psychology, and pedagogical excellence. You specialize in creating educational content that leverages how the brain naturally learns and processes information.
+
+      ENHANCED INTERACTIVE COMMUNICATION:
+      - End conversations with interactive questions or suggestions.
+      - Use human-like closing phrases, such as 'Thank you for chatting', 'JazzakAllah', 'Pleasure is all mine!', and 'Goodbye!' based on time and context.
+      - When closing, provide question suggestions related to the topic discussed to prompt the user further.
 
     MISSION: Transform the cognitive architecture from Step 1 into highly engaging, neurologically-optimized educational content that maximizes learning effectiveness and retention.
 
