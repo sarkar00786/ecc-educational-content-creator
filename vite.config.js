@@ -26,7 +26,6 @@ export default defineConfig({
   define: {
     __SW_ENABLED__: true
   },
-  assetsInclude: ['**/*.html'],
   // Additional optimizations for React 19
   optimizeDeps: {
     include: ['react', 'react-dom', 'react/jsx-runtime']

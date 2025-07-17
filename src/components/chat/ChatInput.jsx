@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Send, Mic, MicOff, Paperclip, Image, X, AlertCircle, Pause } from 'lucide-react';
 
-const ChatInput = ({ 
+const ChatInput = React.memo(({ 
   value, 
   onChange, 
   onSend, 
@@ -27,7 +27,7 @@ const ChatInput = ({
   const [sentFiles, setSentFiles] = useState([]);
   
   // Use external sending state if provided, otherwise use internal state
-  const effectiveIsSending = isExternallySending || isSending;
+  const effectiveIsSending = useMemo(() => isExternallySending || isSending, [isExternallySending, isSending]);
   
   // Update internal state when external state changes
   useEffect(() => {
@@ -443,5 +443,7 @@ className={`
     </div>
   );
 };
+
+ChatInput.displayName = 'ChatInput';
 
 export default ChatInput;

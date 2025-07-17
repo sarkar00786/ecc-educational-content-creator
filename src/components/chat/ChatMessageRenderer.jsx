@@ -2,7 +2,7 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { Copy, Check, FileText, Image, Download, ExternalLink } from 'lucide-react';
+import { Copy, Check, FileText, Image, Download, ExternalLink, BookOpen, Lightbulb, Target, Info } from 'lucide-react';
 import { useState } from 'react';
 
 const ChatMessageRenderer = ({ message, isUser = false, files = [] }) => {
@@ -89,17 +89,23 @@ const ChatMessageRenderer = ({ message, isUser = false, files = [] }) => {
       </blockquote>
     ),
 
-    // Custom list styling
-    ul: ({ children }) => (
-      <ul className="list-disc list-inside space-y-1 my-2">
+    // Enhanced list styling with proper visibility
+    ul: ({ children, ...props }) => (
+      <ul className="list-disc list-outside ml-6 space-y-1 my-3" {...props}>
         {children}
       </ul>
     ),
 
-    ol: ({ children }) => (
-      <ol className="list-decimal list-inside space-y-1 my-2">
+    ol: ({ children, ...props }) => (
+      <ol className="list-decimal list-outside ml-6 space-y-1 my-3" {...props}>
         {children}
       </ol>
+    ),
+
+    li: ({ children, ...props }) => (
+      <li className="leading-normal mb-1 text-inherit" {...props}>
+        {children}
+      </li>
     ),
 
     // Custom link styling
@@ -118,55 +124,126 @@ const ChatMessageRenderer = ({ message, isUser = false, files = [] }) => {
       </a>
     ),
 
-    // Custom heading styling
+    // Educational headings with visual hierarchy and icons
     h1: ({ children }) => (
-      <h1 className="text-xl font-bold mt-4 mb-2 first:mt-0">
-        {children}
-      </h1>
+      <div className="mt-8 mb-6 first:mt-4">
+        <div className="flex items-center space-x-3 mb-3">
+          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+            <Target className="w-4 h-4 text-white" />
+          </div>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+            {children}
+          </h1>
+        </div>
+        <div className="w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" />
+      </div>
     ),
 
     h2: ({ children }) => (
-      <h2 className="text-lg font-semibold mt-3 mb-2 first:mt-0">
-        {children}
-      </h2>
+      <div className="mt-7 mb-5 first:mt-3">
+        <div className="flex items-center space-x-3 mb-2">
+          <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
+            <Lightbulb className="w-3 h-3 text-white" />
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            {children}
+          </h2>
+        </div>
+        <div className="w-24 h-0.5 bg-purple-500 rounded-full ml-9" />
+      </div>
     ),
 
     h3: ({ children }) => (
-      <h3 className="text-base font-medium mt-3 mb-2 first:mt-0">
-        {children}
-      </h3>
+      <div className="mt-6 mb-4 first:mt-2">
+        <div className="flex items-center space-x-2">
+          <div className="w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center">
+            <div className="w-2 h-2 bg-white rounded-full" />
+          </div>
+          <h3 className="text-base font-medium text-gray-900 dark:text-white">
+            {children}
+          </h3>
+        </div>
+      </div>
     ),
 
-    // Custom paragraph styling
+    // Paragraph styling with common practices
     p: ({ children }) => (
-      <p className="my-2 first:mt-0 last:mb-0 leading-relaxed">
+      <p className="mb-4 first:mt-2 last:mb-2 leading-normal">
         {children}
       </p>
     ),
 
-    // Custom table styling
+    // Better spacing for strong/bold text
+    strong: ({ children }) => (
+      <strong className="font-semibold text-gray-900 dark:text-gray-100">
+        {children}
+      </strong>
+    ),
+
+    // Better spacing for emphasis/italic text
+    em: ({ children }) => (
+      <em className="italic text-gray-800 dark:text-gray-200">
+        {children}
+      </em>
+    ),
+
+    // Enhanced table styling with better appearance
     table: ({ children }) => (
-      <div className="overflow-x-auto my-4">
-        <table className="min-w-full border border-gray-300 dark:border-gray-600">
+      <div className="overflow-x-auto my-6">
+        <table className={`min-w-full border-collapse rounded-lg shadow-sm ${
+          isUser 
+            ? 'border border-blue-200 dark:border-blue-800' 
+            : 'border border-gray-200 dark:border-gray-700'
+        }`}>
           {children}
         </table>
       </div>
     ),
 
-    th: ({ children }) => (
-      <th className={`border border-gray-300 dark:border-gray-600 px-3 py-2 text-left font-medium ${
+    thead: ({ children }) => (
+      <thead className={`${
         isUser 
-          ? 'bg-blue-100 dark:bg-blue-900/30' 
-          : 'bg-gray-100 dark:bg-gray-700'
+          ? 'bg-blue-50 dark:bg-blue-900/20' 
+          : 'bg-gray-50 dark:bg-gray-800/50'
+      }`}>
+        {children}
+      </thead>
+    ),
+
+    tbody: ({ children }) => (
+      <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+        {children}
+      </tbody>
+    ),
+
+    th: ({ children }) => (
+      <th className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider ${
+        isUser 
+          ? 'text-blue-800 dark:text-blue-200 bg-blue-100 dark:bg-blue-900/30' 
+          : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700'
       }`}>
         {children}
       </th>
     ),
 
     td: ({ children }) => (
-      <td className="border border-gray-300 dark:border-gray-600 px-3 py-2">
+      <td className={`px-4 py-3 text-sm whitespace-nowrap ${
+        isUser 
+          ? 'text-blue-900 dark:text-blue-100' 
+          : 'text-gray-900 dark:text-gray-100'
+      }`}>
         {children}
       </td>
+    ),
+
+    tr: ({ children }) => (
+      <tr className={`transition-colors ${
+        isUser 
+          ? 'hover:bg-blue-50 dark:hover:bg-blue-900/10' 
+          : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
+      }`}>
+        {children}
+      </tr>
     ),
 
     // Custom horizontal rule
@@ -227,7 +304,7 @@ const ChatMessageRenderer = ({ message, isUser = false, files = [] }) => {
   };
 
   return (
-    <div className="prose prose-sm max-w-none dark:prose-invert text-sm whitespace-pre-wrap">
+    <div className="prose prose-sm max-w-none dark:prose-invert text-sm space-y-4">
       <ReactMarkdown
         components={components}
       >

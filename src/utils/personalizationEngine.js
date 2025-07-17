@@ -47,9 +47,9 @@ export class PersonalizationEngine {
       response = response.replace(/\bLet us\b/g, 'Let\'s');
       response = response.replace(/\bYou have\b/g, 'You\'ve');
       
-      // Add casual interjections
-      if (Math.random() < 0.3) {
-        const casualInterjections = ['bhai', 'dekho', 'suno', 'chalo', 'arre', 'yar', 'boss', 'dost', 'bro', 'janab', 'wesy'];
+      // Add casual interjections occasionally
+      if (Math.random() < 0.1) {
+        const casualInterjections = ['sure', 'alright', 'okay', 'well', 'so', 'basically'];
         const interjection = casualInterjections[Math.floor(Math.random() * casualInterjections.length)];
         response = `${interjection}, ${response}`;
       }
@@ -101,14 +101,13 @@ export class PersonalizationEngine {
         }
       });
 
-      // Add cultural expressions
-      if (Math.random() < 0.3) {
+      // Add cultural expressions occasionally
+      if (Math.random() < 0.05) {
         const culturalExpressions = [
-          'Insha\'Allah',
-          'Mashallah',
-          'Alhamdulillah',
-          'bilkul theek',
-          'koi baat nahi'
+          'exactly',
+          'perfect',
+          'great',
+          'excellent'
         ];
         const expression = culturalExpressions[Math.floor(Math.random() * culturalExpressions.length)];
         response = `${response} ${expression}!`;
@@ -233,7 +232,7 @@ export class PersonalizationEngine {
       ]
     };
 
-    if (Math.random() < 0.4) { // 40% chance to add empathy marker
+    if (Math.random() < 0.15) { // Reduced to 15% chance to add empathy marker
       const markers = empathyMarkers[emotionalState] || empathyMarkers.neutral;
       const marker = markers[Math.floor(Math.random() * markers.length)];
       response = `${marker}. ${response}`;

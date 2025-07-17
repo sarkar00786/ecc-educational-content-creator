@@ -140,7 +140,7 @@ const ChatWindow = ({ user, db, currentChatId, onError, onSuccess, chatHistoryLi
   // App ID for Firestore paths
   const appId = 'ecc-app-ab284';
 
-  // Intelligent persona selection based on context
+  // Intelligent persona selection based on context - optimized to prevent excessive re-renders
   const selectPersonaBasedOnContext = useCallback((userMessage, userState, currentSubject) => {
     // Import persona analysis and blending - moved to dynamic import
     // const { analyzePersonaForMessage, blendPersonaCharacteristics } = require('../../utils/aiPersonas');
@@ -162,15 +162,17 @@ const ChatWindow = ({ user, db, currentChatId, onError, onSuccess, chatHistoryLi
         console.log(`Auto-selecting persona: ${selectedPersona} based on context analysis`);
         chatDispatch({ type: 'SET_AI_PERSONA', payload: selectedPersona });
         
-        // Update Firestore with the new persona
+        // Update Firestore with the new persona - use setTimeout to prevent blocking
         if (currentChatId && user && db) {
-          const chatRef = doc(db, `artifacts/${appId}/users/${user.uid}/chats`, currentChatId);
-          updateDoc(chatRef, {
-            aiPersona: selectedPersona,
-            lastUpdated: serverTimestamp()
-          }).catch(error => {
-            console.error('Error updating persona in Firestore:', error);
-          });
+          setTimeout(() => {
+            const chatRef = doc(db, `artifacts/${appId}/users/${user.uid}/chats`, currentChatId);
+            updateDoc(chatRef, {
+              aiPersona: selectedPersona,
+              lastUpdated: serverTimestamp()
+            }).catch(error => {
+              console.error('Error updating persona in Firestore:', error);
+            });
+          }, 0);
         }
       }
       
@@ -179,7 +181,7 @@ const ChatWindow = ({ user, db, currentChatId, onError, onSuccess, chatHistoryLi
       console.error('Error in persona selection:', error);
       return chatState.aiPersona || 'Educator';
     }
-  }, [chatState.aiPersona, chatState.messages, userMemory, currentChatId, user, db]);
+  }, [chatState.aiPersona, userMemory?.userPreferences, currentChatId, user, db]); // Removed chatState.messages to prevent frequent re-creation
 
   // Memoized function to get styling for AI personas using external config
   const getPersonaStyle = useMemo(() => {
@@ -277,19 +279,19 @@ const ChatWindow = ({ user, db, currentChatId, onError, onSuccess, chatHistoryLi
     if (isScrolledToBottom) {
       const lastMessage = chatState.messages[chatState.messages.length - 1];
       
-      if (lastMessage.role === 'user') {
+      if (lastMessage && lastMessage.role === 'user') {
         // For user messages, show them under the header immediately
-        setTimeout(() => {
+        requestAnimationFrame(() => {
           scrollToShowUserMessage();
-        }, 100); // Small delay to ensure DOM is updated
-      } else if (lastMessage.role === 'model') {
+        });
+      } else if (lastMessage && lastMessage.role === 'model') {
         // For AI messages, scroll to bottom to show the response
-        setTimeout(() => {
+        requestAnimationFrame(() => {
           scrollToBottom();
-        }, 100);
+        });
       }
     }
-  }, [chatState.messages, isScrolledToBottom, scrollToBottom, scrollToShowUserMessage]);
+  }, [chatState.messages.length, isScrolledToBottom]); // Reduced dependencies to only length
   
   // Effect for forced scrolling when needed
   useEffect(() => {
@@ -678,19 +680,23 @@ const handleSendMessage = useCallback(async (text, files = []) => {
         // but we can also dispatch a custom event to immediately update the parent component
         // This ensures the sidebar updates immediately even if Firebase is slow
         // Use requestAnimationFrame to prevent blocking the main thread and reduce re-renders
-        requestAnimationFrame(() => {
-          const updateEvent = new CustomEvent('chatUpdated', {
-            detail: {
-              chatId: currentChatId,
-              updates: {
-                messages: updatedMessages,
-                title: updateData.title || chatState.chatTitle,
-                lastUpdated: new Date()
+        // Only dispatch if there are actual changes to prevent unnecessary re-renders
+        const hasActualChanges = updatedMessages.length > 0 || updateData.title;
+        if (hasActualChanges) {
+          requestAnimationFrame(() => {
+            const updateEvent = new CustomEvent('chatUpdated', {
+              detail: {
+                chatId: currentChatId,
+                updates: {
+                  messages: updatedMessages,
+                  title: updateData.title || chatState.chatTitle,
+                  lastUpdated: new Date()
+                }
               }
-            }
+            });
+            window.dispatchEvent(updateEvent);
           });
-          window.dispatchEvent(updateEvent);
-        });
+        }
       }
 
     } catch (err) {
@@ -704,7 +710,7 @@ const handleSendMessage = useCallback(async (text, files = []) => {
       setIsSending(false);
       setSendingController(null);
     }
-  }, [chatState, currentChatId, user, db, onError, chatHistoryList, getLinkedChatContexts, callGeminiAPI, userMemory, interactionRecorder, personalizationEngine]);
+  }, [chatState.messages, chatState.currentSubject, chatState.aiPersona, chatState.linkedChats, currentChatId, user, db, onError, chatHistoryList, getLinkedChatContexts, callGeminiAPI, userMemory, interactionRecorder, personalizationEngine]);
 
   // Effect to send message when voice transcript is available
   useEffect(() => {

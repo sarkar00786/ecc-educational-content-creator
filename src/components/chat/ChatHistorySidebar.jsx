@@ -3,7 +3,7 @@ import { collection, query, orderBy, onSnapshot, doc, deleteDoc, updateDoc, addD
 import { Search, Plus, ChevronDown, ChevronRight, Pin, Archive, MessageSquare, Trash2, MoreHorizontal } from 'lucide-react';
 import ChatCard from './ChatCard';
 
-const ChatHistorySidebar = ({ 
+const ChatHistorySidebar = React.memo(({ 
   user, 
   db, 
   onSelectChat, 
@@ -364,5 +364,7 @@ const ChatHistorySidebar = ({
     </div>
   );
 };
+
+ChatHistorySidebar.displayName = 'ChatHistorySidebar';
 
 export default ChatHistorySidebar;

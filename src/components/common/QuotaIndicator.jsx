@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { AlertTriangle, Info, MessageSquare, FileText, Upload, Clock } from 'lucide-react';
 import { CHAT_LIMITS } from '../../config/chatLimits';
 
-const QuotaIndicator = ({ 
+const QuotaIndicator = React.memo(({ 
   currentMessages = 0, 
   filesUploaded = 0, 
   totalFileSize = 0,
@@ -44,7 +44,7 @@ const QuotaIndicator = ({
   };
   
   // Calculate usage statistics
-  const stats = [
+  const stats = useMemo(() => [
     {
       label: 'Messages',
       used: currentMessages,
@@ -80,17 +80,19 @@ const QuotaIndicator = ({
       icon: Clock,
       type: 'daily'
     }
-  ];
+  ], [currentMessages, filesUploaded, contentFilesUsed, chatCardsUsed, dailyChatsUsed]);
   
   // Find the most critical (highest percentage) stat
-  const criticalStat = stats.reduce((max, stat) => {
-    const percentage = getUsagePercentage(stat.used, stat.max);
-    const maxPercentage = getUsagePercentage(max.used, max.max);
-    return percentage > maxPercentage ? stat : max;
-  });
+  const criticalStat = useMemo(() => {
+    return stats.reduce((max, stat) => {
+      const percentage = getUsagePercentage(stat.used, stat.max);
+      const maxPercentage = getUsagePercentage(max.used, max.max);
+      return percentage > maxPercentage ? stat : max;
+    });
+  }, [stats]);
   
-  const criticalPercentage = getUsagePercentage(criticalStat.used, criticalStat.max);
-  const criticalColor = getStatusColor(criticalPercentage, criticalStat.type);
+  const criticalPercentage = useMemo(() => getUsagePercentage(criticalStat.used, criticalStat.max), [criticalStat]);
+  const criticalColor = useMemo(() => getStatusColor(criticalPercentage, criticalStat.type), [criticalPercentage, criticalStat.type]);
   
   if (!showDetails) {
     // Compact view - show only critical warning if approaching limits
@@ -274,5 +276,7 @@ const QuotaIndicator = ({
     </div>
   );
 };
+
+QuotaIndicator.displayName = 'QuotaIndicator';
 
 export default QuotaIndicator;

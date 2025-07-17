@@ -57,9 +57,22 @@ const ChatPage = ({ user, db, onError, onSuccess, linkedContentForChat, setLinke
         return prevList.map(chat => {
           if (chat.id === chatId) {
             // Only update if there are actual changes
-            const hasChanges = Object.keys(updates).some(key => 
-              JSON.stringify(chat[key]) !== JSON.stringify(updates[key])
-            );
+            const hasChanges = Object.keys(updates).some(key => {
+              const currentValue = chat[key];
+              const newValue = updates[key];
+              
+              // Handle different types of comparisons
+              if (Array.isArray(currentValue) && Array.isArray(newValue)) {
+                return JSON.stringify(currentValue) !== JSON.stringify(newValue);
+              }
+              
+              if (typeof currentValue === 'object' && typeof newValue === 'object') {
+                return JSON.stringify(currentValue) !== JSON.stringify(newValue);
+              }
+              
+              return currentValue !== newValue;
+            });
+            
             return hasChanges ? { ...chat, ...updates } : chat;
           }
           return chat;
