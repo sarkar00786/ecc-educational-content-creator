@@ -189,6 +189,110 @@ export const uploadFile = async (file, path) => {
   }
 };
 
+// Enhanced file upload function that reads content and uploads to Firebase
+export const uploadFileWithContent = async (file, userId, chatId, fileId) => {
+  try {
+    // Read file content
+    const fileContent = await readFileContent(file);
+    
+    // Create file path
+    const filePath = `chats/${userId}/${chatId}/${fileId}-${file.name}`;
+    
+    // Upload file to Firebase Storage
+    const storageRef = ref(storage, filePath);
+    const snapshot = await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    
+    // Return file metadata with content
+    return {
+      id: fileId,
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      url: downloadURL,
+      content: fileContent,
+      uploadedAt: new Date().toISOString()
+    };
+  } catch (error) {
+    console.error('Enhanced file upload error:', error);
+    throw error;
+  }
+};
+
+// File content reader utility
+const readFileContent = async (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    
+    reader.onload = (event) => {
+      try {
+        const content = event.target.result;
+        
+        // Handle different file types
+        if (file.type.startsWith('text/') || file.type === 'application/json') {
+          // Text files - return as is
+          resolve(content);
+        } else if (file.type === 'application/pdf') {
+          // For PDF, we'll store a placeholder and handle it differently
+          resolve('[PDF Content - This is a PDF file that needs to be processed by the AI]');
+        } else if (file.type.startsWith('image/')) {
+          // For images, convert to base64 and add description
+          const base64Content = content.split(',')[1]; // Remove data:image/...;base64, prefix
+          resolve(`[Image Content - Base64 Data]\nFile Type: ${file.type}\nFile Name: ${file.name}\nNote: This is an image file that the AI should analyze.`);
+        } else if (file.type.includes('spreadsheet') || file.type.includes('excel') || file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+          // For spreadsheets
+          resolve(`[Spreadsheet Content]\nFile Type: ${file.type}\nFile Name: ${file.name}\nNote: This is a spreadsheet file that contains data the AI should analyze.`);
+        } else if (file.type.includes('document') || file.type.includes('word') || file.name.endsWith('.docx') || file.name.endsWith('.doc')) {
+          // For documents
+          resolve(`[Document Content]\nFile Type: ${file.type}\nFile Name: ${file.name}\nNote: This is a document file that contains text the AI should analyze.`);
+        } else {
+          // For other file types
+          resolve(`[File Content]\nFile Type: ${file.type}\nFile Name: ${file.name}\nFile Size: ${file.size} bytes\nNote: This is a file that the AI should analyze based on its type and name.`);
+        }
+      } catch (error) {
+        reject(error);
+      }
+    };
+    
+    reader.onerror = (error) => {
+      reject(error);
+    };
+    
+    // Read file based on type
+    if (file.type.startsWith('text/') || file.type === 'application/json') {
+      reader.readAsText(file);
+    } else if (file.type.startsWith('image/')) {
+      reader.readAsDataURL(file);
+    } else {
+      // For other file types, try to read as text first
+      reader.readAsText(file);
+    }
+  });
+};
+
+// Function to fetch file content from URL (fallback)
+export const fetchFileContentFromURL = async (fileUrl, fileName, fileType) => {
+  try {
+    const response = await fetch(fileUrl);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch file: ${response.statusText}`);
+    }
+    
+    if (fileType.startsWith('text/') || fileType === 'application/json') {
+      const textContent = await response.text();
+      return textContent;
+    } else if (fileType.startsWith('image/')) {
+      return `[Image Content from URL]\nFile Name: ${fileName}\nFile Type: ${fileType}\nURL: ${fileUrl}\nNote: This is an image file that the AI should analyze.`;
+    } else {
+      return `[File Content from URL]\nFile Name: ${fileName}\nFile Type: ${fileType}\nURL: ${fileUrl}\nNote: This is a file that the AI should analyze based on its type and name.`;
+    }
+  } catch (error) {
+    console.error('Error fetching file content from URL:', error);
+    return `[File Content Unavailable]\nFile Name: ${fileName}\nFile Type: ${fileType}\nError: Could not retrieve file content\nNote: The AI should acknowledge that this file was attached but content is not available.`;
+  }
+};
+
 // Utility functions
 export const getCurrentUser = () => {
   return auth.currentUser;

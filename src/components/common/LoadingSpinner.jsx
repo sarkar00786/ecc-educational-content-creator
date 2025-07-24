@@ -149,7 +149,7 @@ const LoadingSpinner = ({
 };
 
 // Specialized loading components for different contexts
-export const AuthLoadingSpinner = ({ message = 'Authenticating...', provider }) => (
+export const AuthLoadingSpinner = ({ message = 'Authenticating...' /* , provider */ }) => (
   <LoadingSpinner 
     variant="primary" 
     size="md" 

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { doc, deleteDoc } from 'firebase/firestore';
 import {
   Box,
@@ -43,7 +43,7 @@ import {
 import { VariableSizeGrid as VirtualGrid } from 'react-window';
 import { Divider } from '@chakra-ui/layout';
 import { Alert, AlertIcon, AlertTitle, AlertDescription } from '@chakra-ui/alert';
-import { motion, AnimatePresence } from 'framer-motion';
+// import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search,
   Filter,
@@ -74,12 +74,12 @@ import {
 const ModernContentHistory = ({
   contentHistory,
   onLoadHistoryItem,
-  onDeleteHistoryItem,
+  // onDeleteHistoryItem, // Commented out unused prop
   searchTerm,
   setSearchTerm,
   isLoading = false,
   db,
-  auth,
+  // auth, // Commented out unused prop
   appId,
   user
 }) => {
@@ -126,7 +126,7 @@ const ModernContentHistory = ({
   }, []);
   const [sortBy, setSortBy] = useState('newest');
   const [filterBy, setFilterBy] = useState('all');
-  const [selectedItems, setSelectedItems] = useState([]);
+    // const [selectedItems, setSelectedItems] = useState([]); // Commented out unused state
   const [selectedIds, setSelectedIds] = useState([]);
   const [isBulkMode, setIsBulkMode] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
@@ -165,10 +165,10 @@ const ModernContentHistory = ({
   }, [contentHistory, searchTerm, filterBy, sortBy]);
 
   // Handle opening delete confirmation dialog
-  const handleDeleteClick = (item) => {
+  const handleDeleteClick = useCallback((item) => {
     setItemToDelete(item);
     setIsDeleteAlertOpen(true);
-  };
+  }, []);
 
   // Handle confirmed deletion
   const handleDeleteConfirm = async () => {
@@ -441,7 +441,7 @@ const ModernContentHistory = ({
   };
 
   // Memoized HistoryItemCard component
-  const HistoryItemCard = React.memo(({ item, index, density, isVirtualized = false }) => {
+  const HistoryItemCard = React.memo(({ item, density }) => {
     const isSmall = density === 'small';
     const isLarge = density === 'large';
     const isList = density === 'list';
@@ -483,13 +483,7 @@ const ModernContentHistory = ({
     };
 
     return (
-      <motion.div
-        initial={!isVirtualized ? { opacity: 0, y: 20 } : { opacity: 1, y: 0 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={!isVirtualized ? { opacity: 0, y: -20, scale: 0.9 } : { opacity: 1, y: 0 }}
-        transition={!isVirtualized ? { duration: 0.3, delay: index * 0.1 } : { duration: 0.2 }}
-        whileHover={{ y: !isList ? -4 : 0 }}
-        layout={false}
+      <div
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -839,7 +833,7 @@ const ModernContentHistory = ({
             </>
           )}
         </Card>
-      </motion.div>
+      </div>
     );
   });
 
@@ -900,7 +894,7 @@ const ModernContentHistory = ({
         </Box>
       </div>
     );
-  }, [getGridDimensions, viewDensity, HistoryItemCard]);
+  }, [getGridDimensions, viewDensity]);
 
   // Virtual list item renderer (for list view)
   const VirtualListItem = useCallback(({ index, style, data }) => {
@@ -920,7 +914,7 @@ const ModernContentHistory = ({
         </Box>
       </div>
     );
-  }, [viewDensity, HistoryItemCard]);
+  }, [viewDensity]);
 
 
   if (isLoading) {
@@ -1091,14 +1085,9 @@ const ModernContentHistory = ({
       </VStack>
 
       {/* Content */}
-      <AnimatePresence>
-        {filteredAndSortedHistory.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <Alert
+      {filteredAndSortedHistory.length === 0 ? (
+        <div>
+          <Alert
               status="info"
               variant="subtle"
               flexDirection="column"
@@ -1119,9 +1108,9 @@ const ModernContentHistory = ({
                   : 'Your generated content will appear here. Create your first educational content to get started!'
                 }
               </AlertDescription>
-            </Alert>
-          </motion.div>
-        ) : shouldUseVirtualGrid ? (
+          </Alert>
+        </div>
+      ) : shouldUseVirtualGrid ? (
           // Use virtual grid for large datasets
           <Box position="relative">
             <Box 
@@ -1191,16 +1180,13 @@ const ModernContentHistory = ({
             }
             gap={4}
           >
-            <AnimatePresence>
-              {filteredAndSortedHistory.map((item, index) => (
-                <GridItem key={item.id}>
-                  <HistoryItemCard item={item} index={index} density={viewDensity} />
-                </GridItem>
-              ))}
-            </AnimatePresence>
+            {filteredAndSortedHistory.map((item, index) => (
+              <GridItem key={item.id}>
+                <HistoryItemCard item={item} index={index} density={viewDensity} />
+              </GridItem>
+            ))}
           </Grid>
         )}
-      </AnimatePresence>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog

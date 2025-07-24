@@ -4,13 +4,9 @@ import QuotaIndicator from './QuotaIndicator';
 
 const QuotaModal = ({ 
   isOpen, 
-  onClose, 
-  currentMessages = 0, 
-  filesUploaded = 0, 
-  totalFileSize = 0,
-  dailyChatsUsed = 0,
-  contentFilesUsed = 0,
-  chatCardsUsed = 0
+  onClose,
+  contentGenerationsUsed = 0,
+  dailyContentUsed = 0
 }) => {
   // Handle escape key press
   const handleEscape = useCallback((event) => {
@@ -65,12 +61,8 @@ const QuotaModal = ({
         {/* Modal Content */}
         <div className="p-4">
           <QuotaIndicator
-            currentMessages={currentMessages}
-            filesUploaded={filesUploaded}
-            totalFileSize={totalFileSize}
-            dailyChatsUsed={dailyChatsUsed}
-            contentFilesUsed={contentFilesUsed}
-            chatCardsUsed={chatCardsUsed}
+            contentGenerationsUsed={contentGenerationsUsed}
+            dailyContentUsed={dailyContentUsed}
             showDetails={true}
           />
         </div>

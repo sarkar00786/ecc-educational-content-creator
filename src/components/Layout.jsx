@@ -5,7 +5,7 @@ import {
   Link,
   VStack,
 } from '@chakra-ui/react';
-import { motion } from 'framer-motion';
+// import { motion } from 'framer-motion';
 import React from 'react';
 
 export default function Layout({ children }) {
@@ -51,22 +51,16 @@ export default function Layout({ children }) {
 
         {/* Main Content */}
         <Flex flex="1" p={{ base: 4, md: 6 }} direction="column" gap={6}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            style={{ flex: 1 }}
+          <Box
+            bg="gray.800"
+            p={6}
+            rounded="2xl"
+            shadow="xl"
+            height="100%"
+            flex="1"
           >
-            <Box
-              bg="gray.800"
-              p={6}
-              rounded="2xl"
-              shadow="xl"
-              height="100%"
-            >
-              {children}
-            </Box>
-          </motion.div>
+            {children}
+          </Box>
         </Flex>
       </Flex>
     </Box>

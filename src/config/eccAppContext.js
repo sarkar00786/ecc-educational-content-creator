@@ -29,27 +29,11 @@ export const ECC_APP_CONTEXT = {
         "Edit and update existing content",
         "Copy content to clipboard",
         "Delete unwanted content",
-        "Link content to chat discussions",
         "Full-screen content viewing"
       ],
       howToUse: "Navigate to the History tab to view all your generated content. Click on any content to view, edit, or manage it."
     },
     
-    magicDiscussion: {
-      name: "Magic Discussion (AI Chat)",
-      description: "Intelligent chat system with Pakistani Urdu-English mixed conversational style",
-      capabilities: [
-        "Natural conversation with AI",
-        "Link any generated content for discussion",
-        "Subject-specific expertise",
-        "Multiple AI personas for different interaction styles",
-        "Cultural adaptation for Pakistani users",
-        "Context-aware responses based on conversation history",
-        "Voice control integration",
-        "Enhanced message classification and user state tracking"
-      ],
-      howToUse: "Click the Chat tab to start a conversation. You can link any content from your history to discuss it with the AI."
-    },
     
     voiceControl: {
       name: "Voice Control Navigation",
@@ -57,7 +41,6 @@ export const ECC_APP_CONTEXT = {
       capabilities: [
         "Navigate between pages using voice",
         "Scroll content with voice commands",
-        "Control chat and content generation",
         "Support for natural language commands"
       ],
       howToUse: "Click the microphone icon in the header and speak commands like 'Content Generation', 'History', or 'Scroll Down'."
@@ -94,7 +77,6 @@ export const ECC_APP_CONTEXT = {
         "Cognitive architecture analysis",
         "Neurologically-optimized content creation",
         "Context optimization for better performance",
-        "Hybrid chat optimization with summarization"
       ]
     },
     
@@ -152,7 +134,6 @@ export const ECC_APP_CONTEXT = {
   commonUserQuestions: {
     "How do I generate content?": "Go to the Content Generation tab, fill in your book content, select your audience class, age, and region, then click Generate Content. The AI will create customized educational material for you.",
     "What subjects are supported?": "ECC supports Mathematics, Science, Physics, Chemistry, History, Literature, Accounting & Finance, and General Education with specialized AI personas for each.",
-    "How does the chat feature work?": "The Magic Discussion feature allows you to chat with AI about any topic. You can link your generated content to discuss it further, and the AI adapts to Pakistani conversational style.",
     "Can I edit my generated content?": "Yes! Go to the History tab, click on any content, and use the Edit button to modify it. Your changes are saved automatically.",
     "What are AI personas?": "AI personas are different interaction styles like Educator (comprehensive), Socratic (question-driven), Friendly (conversational), Formal (academic), etc. Choose based on your preference.",
     "How do I use voice control?": "Click the microphone icon in the header and speak commands like 'Content Generation', 'History', 'Scroll Down', or 'Chat'. It works in most modern browsers."
@@ -161,7 +142,6 @@ export const ECC_APP_CONTEXT = {
   troubleshooting: {
     "Content generation is slow": "This is normal as the AI performs multi-step analysis. The system optimizes content through cognitive architecture analysis for better learning outcomes.",
     "Voice control not working": "Ensure you're using a supported browser (Chrome, Edge, Safari) and have granted microphone permissions.",
-    "Chat responses seem repetitive": "Try changing the AI persona or providing more specific questions. The AI adapts to your communication style over time.",
     "Can't find my content": "Check the History tab and use the search function. All your generated content is saved automatically."
   },
   
@@ -172,7 +152,6 @@ export const ECC_APP_CONTEXT = {
       "Make educational content creation accessible to all educators",
       "Provide culturally-sensitive AI responses for Pakistani users",
       "Offer comprehensive subject coverage with expert-level AI personas",
-      "Enable seamless integration between content creation and discussion",
       "Maintain high accessibility standards for inclusive education"
     ]
   }
@@ -189,9 +168,6 @@ export const getECCContextForAI = (topic = 'general') => {
     case 'content':
     case 'generation':
       return context.coreFeatures.contentGeneration;
-    case 'chat':
-    case 'discussion':
-      return context.coreFeatures.magicDiscussion;
     case 'voice':
       return context.coreFeatures.voiceControl;
     case 'history':

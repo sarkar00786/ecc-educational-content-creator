@@ -1,7 +1,7 @@
 import React from 'react';
 import ProBadge from '../common/ProBadge';
 
-const HistoryCard = ({ content, onClick, onLoadToEditor, onDelete, onLinkToChat, isSelected }) => {
+const HistoryCard = ({ content, onClick, onLoadToEditor, onDelete, isSelected }) => {
   const formatDate = (timestamp) => {
     if (!timestamp) return 'N/A';
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
@@ -68,23 +68,6 @@ const HistoryCard = ({ content, onClick, onLoadToEditor, onDelete, onLinkToChat,
             <span>Load</span>
           </button>
           
-          {onLinkToChat && (
-            <div className="relative">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onLinkToChat(content);
-                }}
-                className="bg-gradient-to-r from-purple-500 to-orange-500 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 hover:from-purple-600 hover:to-orange-600 hover:shadow-md hover:scale-105 shadow-sm flex items-center space-x-1"
-                title="Discuss in Chat"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.418 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.418-8 9-8s9 3.582 9 8z" />
-                </svg>
-                <span>Discuss</span>
-              </button>
-            </div>
-          )}
           
           {onDelete && (
             <button

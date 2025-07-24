@@ -5,7 +5,7 @@ import { ArrowRight, Star, Zap } from 'lucide-react';
 
 const TierStatusIndicator = ({ showUpgradePrompt = true, onUpgrade = null }) => {
   const currentTier = userTierManager.getCurrentTier();
-  const tierInfo = userTierManager.getTierDisplayInfo();
+  // const tierInfo = userTierManager.getTierDisplayInfo(); // Commented out unused variable
 
   const handleUpgradeClick = () => {
     if (onUpgrade) {

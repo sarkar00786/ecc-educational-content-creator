@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Box,
   VStack,
@@ -21,7 +21,7 @@ import {
 } from '@chakra-ui/react';
 import { Radio, RadioGroup } from '@chakra-ui/radio';
 import { Divider } from '@chakra-ui/layout';
-import { motion, AnimatePresence } from 'framer-motion';
+// import { motion, AnimatePresence } from 'framer-motion';
 import {
   Upload,
   FileText,

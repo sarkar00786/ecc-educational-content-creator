@@ -31,10 +31,9 @@ const StepSidebar = ({ steps, currentStep, onStepChange, validationStates = {} }
       </h2>
       
       <div className="space-y-4">
-        {steps.map((step, index) => {
+        {steps.map((step) => {
           const isActive = step.id === currentStep;
           const isCompleted = validationStates[step.id]?.isValid || false;
-          const isClickable = true; // Make ALL steps clickable
           const StepIconComponent = getStepIcon(step.id);
 
           return (

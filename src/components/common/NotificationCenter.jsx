@@ -25,9 +25,9 @@ const NotificationCenter = ({
   const [activeTab, setActiveTab] = useState('recent');
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [expandedGroups, setExpandedGroups] = useState(new Set());
+  // const [expandedGroups, setExpandedGroups] = useState(new Set()); // Commented out unused state
   const [showAdvancedPreferences, setShowAdvancedPreferences] = useState(false);
-  const [sortBy, setSortBy] = useState('timestamp'); // 'timestamp', 'priority', 'type'
+  // const [sortBy, setSortBy] = useState('timestamp'); // 'timestamp', 'priority', 'type' // Commented out unused state
   const centerRef = useRef(null);
 
   // Handle click outside to close
@@ -393,7 +393,7 @@ const NotificationCenter = ({
   );
 
   return (
-    <>
+    <React.Fragment>
       {createPortal(centerContent, document.body)}
       
       {/* Advanced Preferences Modal */}
@@ -407,7 +407,7 @@ const NotificationCenter = ({
           setShowAdvancedPreferences(false);
         }}
       />
-    </>
+    </React.Fragment>
   );
 };
 

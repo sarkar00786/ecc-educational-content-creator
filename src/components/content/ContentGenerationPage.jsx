@@ -1,13 +1,11 @@
-import React, { useState, useEffect, useCallback, forwardRef, useRef, useImperativeHandle, useMemo, useReducer } from 'react';
+import React, { useEffect, useCallback, forwardRef, useRef, useImperativeHandle, useReducer } from 'react';
 import StepSidebar from './StepSidebar';
 import StepView from './StepView';
 import GeneratedContentDisplay from './GeneratedContentDisplay';
 import SubjectPrompting from '../common/SubjectPrompting';
 import CelebrationAnimation from '../common/CelebrationAnimation';
-import { validateStep, canNavigateToNextStep } from '../../utils/validation';
+import { validateStep } from '../../utils/validation';
 import ButtonFireworks from '../common/ButtonFireworks';
-import { subjectPromptsConfig } from '../../utils/subjectPrompts';
-import { aiPersonasConfig } from '../../utils/aiPersonas';
 import { isPROUser } from '../../config/userTiers';
 
 // Consolidated state using useReducer for better performance
@@ -84,7 +82,7 @@ const stateReducer = (state, action) => {
   }
 };
 
-const ContentGenerationPage = forwardRef(({ user, onSuccess, onError, generatedContent, setGeneratedContent, selectedSubject, setSelectedSubject, bookContent, setBookContent, selectedPersona, callGeminiAPI, isProUser }, ref) => {
+const ContentGenerationPage = forwardRef(({ user, onSuccess, onError, generatedContent, setGeneratedContent, selectedSubject, bookContent, selectedPersona, callGeminiAPI, isProUser }, ref) => {
   const [state, dispatch] = useReducer(stateReducer, initialState);
   const stepViewRef = useRef(null);
   const generatedContentRef = useRef(null);
@@ -289,76 +287,76 @@ const ContentGenerationPage = forwardRef(({ user, onSuccess, onError, generatedC
     console.log('Content copied to clipboard!');
   };
 
-  // Get subject data for PRO benefits
-  const getSubjectData = (subject) => {
-    switch (subject) {
-      case 'Mathematics':
-        return {
-          benefits: [
-            'Better problem-solving skills',
-            'Enhanced logical thinking',
-            'Improved mathematical confidence',
-            'Better exam preparation'
-          ]
-        };
-      case 'Science':
-        return {
-          benefits: [
-            'Enhanced critical thinking',
-            'Better scientific reasoning',
-            'Improved research skills',
-            'Deeper understanding of concepts'
-          ]
-        };
-      case 'Physics':
-        return {
-          benefits: [
-            'Better understanding of natural phenomena',
-            'Enhanced analytical thinking',
-            'Improved problem-solving abilities',
-            'Better exam performance'
-          ]
-        };
-      case 'Chemistry':
-        return {
-          benefits: [
-            'Better understanding of chemical processes',
-            'Enhanced laboratory skills',
-            'Improved safety awareness',
-            'Better exam preparation'
-          ]
-        };
-      case 'History':
-        return {
-          benefits: [
-            'Better understanding of historical context',
-            'Enhanced critical thinking',
-            'Improved analytical skills',
-            'Better exam preparation'
-          ]
-        };
-      case 'Literature':
-        return {
-          benefits: [
-            'Enhanced reading comprehension',
-            'Better analytical writing',
-            'Improved critical thinking',
-            'Deeper understanding of texts'
-          ]
-        };
-      case 'Accounting & Finance':
-        return {
-          benefits: [
-            'Better financial decision-making',
-            'Enhanced analytical skills',
-            'Improved business understanding',
-            'Better career preparation'
-          ]
-        };
-      default:
-        return { benefits: [] };
-    }
-  };
+  // Get subject data for PRO benefits - Commented out as it's not being used
+  // const getSubjectData = (subject) => {
+  //   switch (subject) {
+  //     case 'Mathematics':
+  //       return {
+  //         benefits: [
+  //           'Better problem-solving skills',
+  //           'Enhanced logical thinking',
+  //           'Improved mathematical confidence',
+  //           'Better exam preparation'
+  //         ]
+  //       };
+  //     case 'Science':
+  //       return {
+  //         benefits: [
+  //           'Enhanced critical thinking',
+  //           'Better scientific reasoning',
+  //           'Improved research skills',
+  //           'Deeper understanding of concepts'
+  //         ]
+  //       };
+  //     case 'Physics':
+  //       return {
+  //         benefits: [
+  //           'Better understanding of natural phenomena',
+  //           'Enhanced analytical thinking',
+  //           'Improved problem-solving abilities',
+  //           'Better exam performance'
+  //         ]
+  //       };
+  //     case 'Chemistry':
+  //       return {
+  //         benefits: [
+  //           'Better understanding of chemical processes',
+  //           'Enhanced laboratory skills',
+  //           'Improved safety awareness',
+  //           'Better exam preparation'
+  //         ]
+  //       };
+  //     case 'History':
+  //       return {
+  //         benefits: [
+  //           'Better understanding of historical context',
+  //           'Enhanced critical thinking',
+  //           'Improved analytical skills',
+  //           'Better exam preparation'
+  //         ]
+  //       };
+  //     case 'Literature':
+  //       return {
+  //         benefits: [
+  //           'Enhanced reading comprehension',
+  //           'Better analytical writing',
+  //           'Improved critical thinking',
+  //           'Deeper understanding of texts'
+  //         ]
+  //       };
+  //     case 'Accounting & Finance':
+  //       return {
+  //         benefits: [
+  //           'Better financial decision-making',
+  //           'Enhanced analytical skills',
+  //           'Improved business understanding',
+  //           'Better career preparation'
+  //         ]
+  //       };
+  //     default:
+  //       return { benefits: [] };
+  //   }
+  // };
 
   const steps = [
     { id: 1, title: '📚 Input Content', description: 'Add your source material' },

@@ -12,7 +12,7 @@ class EnhancedErrorBoundary extends React.Component {
     };
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError() {
     // Update state so the next render will show the fallback UI
     return { 
       hasError: true,
@@ -91,7 +91,7 @@ class EnhancedErrorBoundary extends React.Component {
     return 'javascript';
   };
 
-  getErrorDetails = (errorType, error) => {
+  getErrorDetails = (errorType) => {
     switch (errorType) {
       case 'infinite-loop':
         return {
@@ -169,7 +169,7 @@ class EnhancedErrorBoundary extends React.Component {
     if (this.state.hasError) {
       const { error, errorInfo, errorId } = this.state;
       const errorType = this.getErrorType(error);
-      const errorDetails = this.getErrorDetails(errorType, error);
+      const errorDetails = this.getErrorDetails(errorType);
       
       const colorClasses = {
         red: 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-200',
@@ -190,7 +190,7 @@ class EnhancedErrorBoundary extends React.Component {
           <div className="max-w-2xl w-full">
             <div className={`rounded-lg border-2 p-6 ${colorClasses[errorDetails.color]}`}>
               <div className="flex items-start space-x-4">
-                <errorDetails.icon className="w-8 h-8 mt-1 flex-shrink-0" />
+                {React.createElement(errorDetails.icon, { className: "w-8 h-8 mt-1 flex-shrink-0" })}
                 <div className="flex-1">
                   <h1 className="text-2xl font-bold mb-2">{errorDetails.title}</h1>
                   <p className="text-sm mb-4">{errorDetails.description}</p>

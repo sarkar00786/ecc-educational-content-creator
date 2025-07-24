@@ -219,8 +219,14 @@ export const bundleOptimizer = {
     document.head.appendChild(link);
   },
   
-  // Service worker registration
+  // Service worker registration (DISABLED IN DEVELOPMENT)
   registerServiceWorker: async () => {
+    // Skip service worker in development to prevent React hook conflicts
+    if (import.meta.env.DEV) {
+      console.log('Service Worker disabled in development mode');
+      return null;
+    }
+    
     if ('serviceWorker' in navigator) {
       try {
         const registration = await navigator.serviceWorker.register('/service-worker.js');

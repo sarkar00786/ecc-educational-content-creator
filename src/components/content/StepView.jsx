@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useEffect, useMemo, useRef, forwardRef, useImperativeHandle } from 'react';
 import ValidatedInput from '../common/ValidatedInput';
 import FileUploadZone from '../common/FileUploadZone';
 import RichTextEditor from './RichTextEditor';
 import { validateStep } from '../../utils/validation';
 import { aiPersonasConfig } from '../../utils/aiPersonas';
-import { isPROUser, getRestrictionReason, shouldShowUpgradePrompts } from '../../config/userTiers';
+import { isPROUser, getRestrictionReason } from '../../config/userTiers';
 
 const StepView = forwardRef(({ 
   currentStep, 

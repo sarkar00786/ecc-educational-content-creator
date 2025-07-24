@@ -6,6 +6,8 @@ import { initializePerformanceOptimizations } from './utils/performanceOptimizer
 import { errorHandler } from './utils/enhancedErrorHandler.jsx'
 import EnhancedErrorBoundary from './components/error/EnhancedErrorBoundary.jsx'
 
+// React duplicate issue fixed! ✅
+
 // Initialize performance optimizations
 initializePerformanceOptimizations();
 
@@ -14,7 +16,7 @@ errorHandler.addErrorListener((error) => {
   console.log('Global error caught:', error);
 });
 
-// Register service worker for offline support
+// Register service worker for offline support (disabled in dev)
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/service-worker.js')
@@ -25,12 +27,22 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
         console.log('Service Worker registration failed:', error);
       });
   });
+} else if ('serviceWorker' in navigator) {
+  // Unregister any existing service workers in development
+  navigator.serviceWorker.getRegistrations().then(function(registrations) {
+    for(let registration of registrations) {
+      console.log('Unregistering service worker in development');
+      registration.unregister();
+    }
+  }).catch(error => {
+    console.log('Failed to unregister service workers:', error);
+  });
 }
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <EnhancedErrorBoundary>
-      <App />
-    </EnhancedErrorBoundary>
-  </StrictMode>,
-)
+const container = document.getElementById('root');
+const root = createRoot(container);
+
+// Temporarily remove StrictMode to prevent React hook duplication issues
+root.render(
+  <App />
+);

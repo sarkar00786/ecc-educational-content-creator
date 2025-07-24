@@ -2,13 +2,12 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Access the API key from Netlify Environment Variables
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AIzaSyAxxAWhx_HPhRclzaQ7RBD2hqFPxBJJe_o";
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AIzaSyBhxDM2Qppd0Fj1pw0fznlpuLysPkccixQ";
 
 // Initialize the Google Generative AI client
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
-// Initial greeting control
-const hasInitialGreetingOccurred = new Set();
+// Initial greeting control - removed unused variable
 
 // Enhanced Context optimization utilities with advanced features
 class ContextOptimizer {
@@ -638,7 +637,7 @@ function formatConvictionForAPI(convictionResponse) {
   `;
 }
 
-// Helper function to send messages to LLM with retry logic
+// Helper function to send messages to LLM with retry logic and rate limiting
 async function sendMessageToLLM(prompt, maxRetries = 3) {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
@@ -654,6 +653,12 @@ async function sendMessageToLLM(prompt, maxRetries = 3) {
       return response.text();
     } catch (error) {
       console.error(`Attempt ${attempt} failed:`, error);
+      
+      // Enhanced error handling for rate limits and quota exceeded
+      if (error.message.includes('429') || error.message.includes('Too Many Requests') || error.message.includes('quota')) {
+        console.error('Rate limit exceeded - daily quota reached');
+        throw new Error('Rate limit exceeded: Please wait a moment before trying again.');
+      }
       
       // Check if it's a rate limit or overload error
       if (error.message.includes('503') || error.message.includes('overloaded') || error.message.includes('rate limit') || error.message.includes('RESOURCE_EXHAUSTED')) {
@@ -1480,7 +1485,14 @@ exports.handler = async (event, context) => {
     let errorMessage = 'Failed to process request';
     let statusCode = 500;
     
-    if (error.message.includes('Failed to generate content')) {
+    // Check for rate limit errors first
+    if (error.message.includes('Rate limit exceeded') || error.message.includes('429') || error.message.includes('Too Many Requests') || error.message.includes('quota')) {
+      errorMessage = 'Rate limit exceeded: Please wait a moment before trying again.';
+      statusCode = 429;
+    } else if (error.message.includes('503') || error.message.includes('overloaded') || error.message.includes('RESOURCE_EXHAUSTED')) {
+      errorMessage = 'Service temporarily unavailable. The AI service is currently overloaded. Please try again in a few moments.';
+      statusCode = 503;
+    } else if (error.message.includes('Failed to generate content')) {
       errorMessage = 'Content generation failed';
     } else if (error.message.includes('Failed to generate quiz')) {
       errorMessage = 'Quiz generation failed';

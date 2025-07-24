@@ -5,19 +5,25 @@
  * - Centralized state management for all notifications
  * - Smart display queue with priority-based rendering
  * - Performance optimization for smooth UI/UX
- * - WebSocket support for real-time notifications (future enhancement)
+ * - Content-focused notification management
  * - Accessibility features and keyboard navigation
  */
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+
+// Safety check to ensure React is properly loaded
+if (!React || typeof React.useState !== 'function') {
+  console.error('React is not properly loaded in useNotificationManager');
+  throw new Error('React hooks are not available - React may not be properly initialized');
+}
 import { notificationService, NOTIFICATION_PRIORITY, NOTIFICATION_CONTEXTS, DND_MODES } from '../services/notificationService';
-import { webSocketNotificationService } from '../services/websocketNotificationService';
 import { progressiveOnboardingService } from '../services/progressiveOnboardingService';
 
 const MAX_SIMULTANEOUS_NOTIFICATIONS = 5;
 const NOTIFICATION_STACK_SPACING = 10; // px between stacked notifications
 
 export const useNotificationManager = (options = {}) => {
+
   const {
     maxNotifications = MAX_SIMULTANEOUS_NOTIFICATIONS,
     enableKeyboardNavigation = true,
@@ -88,33 +94,6 @@ export const useNotificationManager = (options = {}) => {
     }));
   }, [maxNotifications, isQueueProcessing]);
 
-  // Add notification to system
-  const addNotification = useCallback((notificationData) => {
-    const notification = notificationService.processNotification({
-      ...notificationData,
-      context: currentContext
-    });
-    
-    // Setup auto-dismiss timer if applicable
-    if (notification.duration > 0) {
-      const timeoutId = setTimeout(() => {
-        removeNotification(notification.id);
-      }, notification.duration);
-      
-      timeoutRefs.current.set(notification.id, timeoutId);
-    }
-    
-    // Play notification sound if enabled
-    if (enableSounds) {
-      playNotificationSound(notification.type, notification.priority);
-    }
-    
-    // Trigger queue processing
-    processQueue();
-    
-    return notification;
-  }, [currentContext, enableSounds, processQueue]);
-
   // Remove notification from system
   const removeNotification = useCallback((id) => {
     // Clear timeout if exists
@@ -143,6 +122,102 @@ export const useNotificationManager = (options = {}) => {
     // Trigger queue processing to show next notification
     processQueue();
   }, [processQueue]);
+
+  // Play notification sound based on type and priority
+  const playNotificationSound = useCallback((type, priority) => {
+    if (!enableSounds) return;
+    
+    try {
+      if (!audioContext.current) {
+        audioContext.current = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      
+      const ctx = audioContext.current;
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      
+      // Different frequencies for different notification types
+      const frequencies = {
+        success: 800,
+        error: 400,
+        warning: 600,
+        info: 500,
+        achievement: 1000
+      };
+      
+      oscillator.frequency.value = frequencies[type] || 500;
+      oscillator.type = 'sine';
+      
+      // Volume based on priority
+      const volumes = {
+        [NOTIFICATION_PRIORITY.CRITICAL]: 0.8,
+        [NOTIFICATION_PRIORITY.HIGH]: 0.6,
+        [NOTIFICATION_PRIORITY.MEDIUM]: 0.4,
+        [NOTIFICATION_PRIORITY.LOW]: 0.2
+      };
+      
+      gainNode.gain.value = volumes[priority] || 0.4;
+      
+      oscillator.start();
+      oscillator.stop(ctx.currentTime + 0.2); // 200ms sound
+    } catch (error) {
+      console.warn('Could not play notification sound:', error);
+    }
+  }, [enableSounds]);
+
+  // Add notification to system
+  const addNotification = useCallback((notificationData) => {
+    const notification = notificationService.processNotification({
+      ...notificationData,
+      context: currentContext
+    });
+    
+    // Setup auto-dismiss timer if applicable
+    if (notification.duration > 0) {
+      const timeoutId = setTimeout(() => {
+        // Clear timeout if exists
+        const currentTimeoutId = timeoutRefs.current.get(notification.id);
+        if (currentTimeoutId) {
+          clearTimeout(currentTimeoutId);
+          timeoutRefs.current.delete(notification.id);
+        }
+        
+        // Clear animation if exists
+        const animationId = animationRefs.current.get(notification.id);
+        if (animationId) {
+          cancelAnimationFrame(animationId);
+          animationRefs.current.delete(notification.id);
+        }
+        
+        // Remove from service
+        notificationService.removeNotification(notification.id);
+        
+        // Update performance metrics
+        setPerformance(prev => ({
+          ...prev,
+          totalDismissed: prev.totalDismissed + 1
+        }));
+        
+        // Trigger queue processing
+        processQueue();
+      }, notification.duration);
+      
+      timeoutRefs.current.set(notification.id, timeoutId);
+    }
+    
+    // Play notification sound if enabled
+    if (enableSounds) {
+      playNotificationSound(notification.type, notification.priority);
+    }
+    
+    // Trigger queue processing
+    processQueue();
+    
+    return notification;
+  }, [currentContext, enableSounds, processQueue, playNotificationSound]);
 
   // Update notification context (for intelligent positioning)
   const updateContext = useCallback((newContext) => {
@@ -193,51 +268,6 @@ export const useNotificationManager = (options = {}) => {
       totalDismissed: prev.totalDismissed + notifications.length
     }));
   }, [notifications.length]);
-
-  // Play notification sound based on type and priority
-  const playNotificationSound = useCallback((type, priority) => {
-    if (!enableSounds) return;
-    
-    try {
-      if (!audioContext.current) {
-        audioContext.current = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      
-      const ctx = audioContext.current;
-      const oscillator = ctx.createOscillator();
-      const gainNode = ctx.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(ctx.destination);
-      
-      // Different frequencies for different notification types
-      const frequencies = {
-        success: 800,
-        error: 400,
-        warning: 600,
-        info: 500,
-        achievement: 1000
-      };
-      
-      oscillator.frequency.value = frequencies[type] || 500;
-      oscillator.type = 'sine';
-      
-      // Volume based on priority
-      const volumes = {
-        [NOTIFICATION_PRIORITY.CRITICAL]: 0.8,
-        [NOTIFICATION_PRIORITY.HIGH]: 0.6,
-        [NOTIFICATION_PRIORITY.MEDIUM]: 0.4,
-        [NOTIFICATION_PRIORITY.LOW]: 0.2
-      };
-      
-      gainNode.gain.value = volumes[priority] || 0.4;
-      
-      oscillator.start();
-      oscillator.stop(ctx.currentTime + 0.2); // 200ms sound
-    } catch (error) {
-      console.warn('Could not play notification sound:', error);
-    }
-  }, [enableSounds]);
 
   // Keyboard navigation support
   useEffect(() => {
@@ -339,31 +369,13 @@ export const useNotificationManager = (options = {}) => {
     });
   }, [addNotification]);
 
-  // WebSocket/SSE Integration
+  // Content Generation Integration
   useEffect(() => {
-    if (options.enableWebSocket && currentContext) {
-      // Initialize WebSocket for real-time notifications
-      webSocketNotificationService.initialize(options.userId || 'anonymous', 'websocket')
-        .then(() => {
-          console.log('📡 WebSocket notification service initialized');
-        })
-        .catch(error => {
-          console.warn('📡 WebSocket initialization failed, falling back to polling:', error);
-        });
-      
-      // Listen for real-time notifications
-      const handleRealTimeNotification = (notification) => {
-        console.log('🔔 Real-time notification received:', notification);
-        addNotification(notification);
-      };
-      
-      webSocketNotificationService.addEventListener('notification', handleRealTimeNotification);
-      
-      return () => {
-        webSocketNotificationService.removeEventListener('notification', handleRealTimeNotification);
-      };
+    if (options.enableContentNotifications && currentContext) {
+      console.log('📝 Content notification system initialized');
+      // Content-specific notification handling can be added here
     }
-  }, [options.enableWebSocket, options.userId, currentContext, addNotification]);
+  }, [options.enableContentNotifications, currentContext, addNotification]);
   
   // Progressive Onboarding Integration
   useEffect(() => {
@@ -397,10 +409,8 @@ export const useNotificationManager = (options = {}) => {
     return () => {
       clearAll();
       
-      // Cleanup WebSocket connection
-      if (webSocketNotificationService) {
-        webSocketNotificationService.disconnect();
-      }
+      // Cleanup content notification system
+      console.log('Notification system cleanup completed');
     };
   }, [clearAll]);
 

@@ -13,11 +13,10 @@ const ToastNotification = React.memo(({
   confirmButtonClass = '',
   isLoading = false,
   persistent = false, // For confirmation toasts that don't auto-dismiss
-  position = 'default', // 'default', 'chat'
+  position = 'default', // 'default', 'top', 'center'
   displayPosition, // For vertical stacking
   stackIndex = 0, // For z-index management
-  // Support for extended confirmation options
-  ...confirmOptions
+  // Support for extended confirmation options - props passed via spread operator
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
@@ -164,8 +163,10 @@ const ToastNotification = React.memo(({
     
     // Fallback to original positioning
     switch (position) {
-      case 'chat':
+      case 'top':
         return `${baseClasses} top-32 z-50`;
+      case 'center':
+        return `${baseClasses} top-1/2 -translate-y-1/2 z-50`;
       default:
         return `${baseClasses} top-20 z-50`;
     }
@@ -187,7 +188,7 @@ const ToastNotification = React.memo(({
       }`}
       style={getPositionStyles()}
     >
-      <div className={`border px-4 py-3 rounded-lg shadow-lg ${getTypeStyles()} ${position === 'chat' ? 'max-w-sm w-80' : ''}`}>
+      <div className={`border px-4 py-3 rounded-lg shadow-lg ${getTypeStyles()} ${position === 'center' ? 'max-w-sm w-80' : ''}`}>
         {/* Header with title and close button */}
         {(title || isConfirmation) && (
           <div className="flex items-start justify-between mb-2">

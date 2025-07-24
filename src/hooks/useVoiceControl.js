@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 const useVoiceControl = () => {
+  // Always call hooks first, before any early returns or conditions
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [error, setError] = useState('');
@@ -138,7 +139,7 @@ const useVoiceControl = () => {
         recognitionRef.current.stop();
       }
     };
-  }, [isListening]);
+  }, []); // Remove isListening dependency to avoid infinite loops
 
   const startListening = useCallback(() => {
     if (!isSupported) {

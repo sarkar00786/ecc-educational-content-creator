@@ -11,8 +11,7 @@ const createTransporter = () => {
   });
 };
 
-exports.handler = async (event, _context) => {
-  // eslint-disable-next-line no-unused-vars
+exports.handler = async (event) => {
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
     return {

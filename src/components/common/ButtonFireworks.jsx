@@ -9,6 +9,7 @@ const ButtonFireworks = ({
 }) => {
   const [particles, setParticles] = useState([]);
   const [showAnimation, setShowAnimation] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [buttonPosition, setButtonPosition] = useState({ x: 0, y: 0 });
 
   // Particle configurations

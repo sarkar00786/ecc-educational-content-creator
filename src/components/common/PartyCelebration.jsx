@@ -222,7 +222,7 @@ const PartyCelebration = ({
     
     // Emit new particles
     if (elapsedTime < duration * 0.6) { // Emit particles for first 60% of animation
-      const emissionInterval = 1000 / config.emissionRate;
+      // const emissionInterval = 1000 / config.emissionRate; // Commented out unused variable
       const particlesToEmit = Math.floor(deltaTime * config.emissionRate);
       
       for (let i = 0; i < particlesToEmit && particlesRef.current.length < config.maxParticles; i++) {

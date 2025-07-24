@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { User, Settings, Sliders, LogOut } from 'lucide-react';
 import ProBadge from '../common/ProBadge';
+// import UserAvatar from '../common/UserAvatar';
 
 const UserProfileDropdown = ({ user, onNavigateToSettings, onLogout, onClose, triggerRef }) => {
   const dropdownRef = useRef(null);

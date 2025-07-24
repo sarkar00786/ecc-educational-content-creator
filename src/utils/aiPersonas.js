@@ -1,5 +1,22 @@
 // src/utils/aiPersonas.js
-import { MESSAGE_INTENTS, USER_STATES } from './messageClassifier';
+
+// Define message intents and user states locally
+const MESSAGE_INTENTS = {
+  FRUSTRATED_SEEKING_HELP: 'frustrated_seeking_help',
+  BRAINSTORMING_COLLABORATIVE: 'brainstorming_collaborative',
+  DIRECT_TASK_ORIENTED: 'direct_task_oriented',
+  EXPLORATORY_PLAYFUL: 'exploratory_playful',
+  LEARNING_FOCUSED: 'learning_focused',
+  FORMAL_INQUIRY: 'formal_inquiry'
+};
+
+const USER_STATES = {
+  FRUSTRATED: 'frustrated',
+  CONFUSED: 'confused',
+  CONFIDENT: 'confident',
+  ENGAGED: 'engaged',
+  NEUTRAL: 'neutral'
+};
 
 // Intelligent persona pattern matching
 const PERSONA_PATTERNS = {
@@ -329,7 +346,7 @@ export const getUserPersonaHistory = () => {
   return userPersonaHistory;
 };
 
-// Function to analyze persona for message (exported for ChatWindow)
+// Function to analyze persona for message (exported for content generation)
 export const analyzePersonaForMessage = (message, context = {}) => {
   const { userState, currentSubject, conversationHistory = [], userPreferences = {} } = context;
   
@@ -371,7 +388,7 @@ export const analyzePersonaForMessage = (message, context = {}) => {
   };
 };
 
-// Function to blend persona characteristics (exported for ChatWindow)
+// Function to blend persona characteristics (exported for content generation)
 export const blendPersonaCharacteristics = (primaryPersona, secondaryPersona, ratio = 0.7) => {
   return blendPersonas(primaryPersona, secondaryPersona, ratio);
 };

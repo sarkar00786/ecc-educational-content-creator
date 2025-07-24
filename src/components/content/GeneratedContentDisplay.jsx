@@ -19,7 +19,7 @@ const GeneratedContentDisplay = forwardRef(({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isDownloadingPDF, setIsDownloadingPDF] = useState(false);
   const scrollableRef = useRef(null);
-  const contentRef = useRef(null);
+  // const contentRef = useRef(null); // Commented out as it's not being used
 
   // Expose scroll methods to parent via ref
   useImperativeHandle(ref, () => ({

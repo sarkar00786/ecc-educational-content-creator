@@ -28,7 +28,16 @@ export const USER_TIERS = {
         CONTENT_CARD_LINKING: true, // 1 per chat
         FILE_UPLOADS: false, // No file uploads
         CHAT_LINKING: false, // No chat linking
-        ADVANCED_FEATURES: false
+        ADVANCED_FEATURES: false,
+        // Content generation features
+        UNLIMITED_CONTENT_GENERATION: false,
+        PREMIUM_TEMPLATES: false,
+        ADVANCED_PROMPTS: false,
+        BULK_GENERATION: false,
+        EXPORT_FORMATS: false,
+        PRIORITY_PROCESSING: false,
+        CUSTOM_PERSONAS: false,
+        ANALYTICS_DASHBOARD: false
       },
       
       // UI/UX restrictions
@@ -78,7 +87,16 @@ export const USER_TIERS = {
         CONTENT_CARD_LINKING: true,
         FILE_UPLOADS: true,
         CHAT_LINKING: true,
-        ADVANCED_FEATURES: true
+        ADVANCED_FEATURES: true,
+        // Content generation features
+        UNLIMITED_CONTENT_GENERATION: true,
+        PREMIUM_TEMPLATES: true,
+        ADVANCED_PROMPTS: true,
+        BULK_GENERATION: true,
+        EXPORT_FORMATS: true,
+        PRIORITY_PROCESSING: true,
+        CUSTOM_PERSONAS: true,
+        ANALYTICS_DASHBOARD: true
       },
       
       // Full UI access
@@ -239,7 +257,7 @@ export class UserTierManager {
       return false;
     }
     
-    const tier = USER_TIERS[matchingTier];
+    // const tier = USER_TIERS[matchingTier];
     
     const tierData = {
       tier: matchingTier,
@@ -269,7 +287,7 @@ export class UserTierManager {
       try {
         const tierData = JSON.parse(stored);
         return tierData.metadata || {};
-      } catch (error) {
+      } catch {
         return {};
       }
     }
@@ -400,15 +418,29 @@ export class UserTierManager {
     
     const trialEndDate = new Date(metadata.trialEndDate);
     const now = new Date();
-    const daysRemaining = Math.ceil((trialEndDate - now) / (1000 * 60 * 60 * 24));
-    const isExpired = daysRemaining <= 0;
+    const msRemaining = trialEndDate - now;
+    const daysRemaining = Math.ceil(msRemaining / (1000 * 60 * 60 * 24));
+    const isExpired = msRemaining <= 0;
+    
+    // Update metadata with current days remaining to fix stuck countdown
+    if (daysRemaining !== metadata.trialDaysRemaining && daysRemaining >= 0) {
+      const updatedMetadata = {
+        ...metadata,
+        trialDaysRemaining: Math.max(0, daysRemaining),
+        lastChecked: new Date().toISOString()
+      };
+      
+      // Update the stored metadata
+      this.setUserTier(this.getCurrentTier().name, updatedMetadata);
+    }
     
     return {
       isOnTrial: true,
       isExpired,
       daysRemaining: Math.max(0, daysRemaining),
       endDate: trialEndDate.toISOString(),
-      startDate: metadata.trialStartDate
+      startDate: metadata.trialStartDate,
+      lastChecked: new Date().toISOString()
     };
   }
   
@@ -474,9 +506,8 @@ export class UserTierManager {
   
   // Admin override functions
   setAdminTierOverride(tierName, userEmail) {
-    const { isSuperUser } = require('./adminConfig');
-    
-    if (!isSuperUser(userEmail)) {
+    // Hardcoded admin check to avoid import issues
+    if (userEmail !== 'azkabloch786@gmail.com') {
       console.error('Only super users can set tier overrides');
       return false;
     }
@@ -518,9 +549,8 @@ export class UserTierManager {
   }
   
   clearAdminTierOverride(userEmail) {
-    const { isSuperUser } = require('./adminConfig');
-    
-    if (!isSuperUser(userEmail)) {
+    // Fallback check with hardcoded admin email
+    if (userEmail !== 'azkabloch786@gmail.com') {
       console.error('Only super users can clear tier overrides');
       return false;
     }
@@ -531,8 +561,8 @@ export class UserTierManager {
   
   // Check if user is admin and has override capabilities
   isAdminUser(userEmail) {
-    const { isSuperUser } = require('./adminConfig');
-    return isSuperUser(userEmail);
+    // Hardcoded admin check to avoid import issues
+    return userEmail === 'azkabloch786@gmail.com';
   }
   
   // Override getCurrentTier to check admin override first

@@ -1,13 +1,9 @@
 import React, { useState, useCallback, useRef } from 'react';
 import UserProfileDropdown from './UserProfileDropdown';
-import ProBadge from '../common/ProBadge';
-import ButtonFireworks from '../common/ButtonFireworks';
-import usePartyCelebration from '../../hooks/usePartyCelebration';
+// import UserAvatar from '../common/UserAvatar';
 import { Brain, Mic, MicOff, Moon, Sun, ChevronDown, User, Shield } from 'lucide-react';
-import { useSettings } from '../../contexts/SettingsContext';
 import { isSuperUser } from '../../config/adminConfig';
 import MyLearningsDropdown from '../common/MyLearningsDropdown';
-import { userTierManager } from '../../config/userTiers';
 
 const Header = ({ 
   currentPage, 
@@ -29,14 +25,6 @@ const Header = ({
   const [adminMode, setAdminMode] = useState('Advanced'); // 'Advanced' or 'PRO'
   const profileButtonRef = useRef(null);
   const adminButtonRef = useRef(null);
-  const magicDiscussionButtonRef = useRef(null);
-
-  // Party celebration for Magic Discussion navigation
-  const partyCelebration = usePartyCelebration({
-    intensity: 'festive',
-    duration: 4000,
-    cooldownPeriod: 0 // No cooldown - celebrate every click!
-  });
 
   const toggleTheme = useCallback(() => {
     setTheme(theme === 'light' ? 'dark' : 'light');
@@ -70,22 +58,6 @@ const Header = ({
     setIsProfileDropdownOpen(false);
     console.log(`Navigating to ${page}`);
   }, [setCurrentPage]);
-  
-  // Special handler for Magic Discussion with party celebration
-  const handleMagicDiscussionClick = useCallback(() => {
-    console.log('🎯 Magic Discussion button clicked!');
-    console.log('Current page:', currentPage);
-    
-    // Close profile dropdown if open
-    setIsProfileDropdownOpen(false);
-    
-    // Force trigger party celebration for Magic Discussion navigation (every click!)
-    partyCelebration.forceStartCelebration();
-    console.log('🎉 Magic Discussion navigation celebration triggered! (Every click)');
-    
-    // Use the App's navigation handler which includes celebration logic
-    setCurrentPage('chat');
-  }, [currentPage, setCurrentPage, partyCelebration]);
 
   return (
     <header className="bg-white dark:bg-gray-800 shadow-lg border-b border-gray-200 dark:border-gray-700 fixed top-0 left-0 right-0 z-50">
@@ -157,21 +129,6 @@ const Header = ({
                 {currentPage === 'generation' ? 'Content History' : 'Content Generation'}
               </button>
               
-              <div className="relative">
-                <button
-                  ref={magicDiscussionButtonRef}
-                  onClick={handleMagicDiscussionClick}
-                  aria-current={currentPage === 'chat' && !currentSettingsPage ? 'page' : undefined}
-                  aria-label="Navigate to Magic Discussion"
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-full font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-opacity-50 ${
-                    currentPage === 'chat' && !currentSettingsPage
-                      ? 'pro-gradient-primary text-white shadow-lg transform scale-105 ring-2 ring-violet-400/50 focus:ring-violet-300'
-                      : 'pro-gradient-secondary text-white shadow-md hover:shadow-lg hover:scale-105 ring-1 ring-violet-400/30 focus:ring-violet-300'
-                  }`}
-                >
-                  Magic Discussion
-                </button>
-              </div>
             </nav>
 
 {/* Voice Control Toggle */}
@@ -324,13 +281,6 @@ const Header = ({
           </div>
         </div>
       </div>
-      
-      {/* Button Fireworks Animation */}
-      <ButtonFireworks 
-        {...partyCelebration.celebrationProps} 
-        buttonRef={magicDiscussionButtonRef}
-        duration={2000}
-      />
     </header>
   );
 };

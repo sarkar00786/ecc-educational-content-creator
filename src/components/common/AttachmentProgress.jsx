@@ -5,18 +5,18 @@ const AttachmentProgress = ({
   isVisible, 
   contentName, 
   onComplete, 
-  onError, 
+  // onError, // Commented out unused prop
   duration = 2000 
 }) => {
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState('attaching'); // 'attaching', 'success', 'error'
-  const [isAnimating, setIsAnimating] = useState(false);
+  // const [isAnimating, setIsAnimating] = useState(false); // Commented out unused state
 
   useEffect(() => {
     if (isVisible) {
       setProgress(0);
       setStatus('attaching');
-      setIsAnimating(true);
+      // setIsAnimating(true); // Commented out since state is unused
       
       // Simulate progress with smooth animation
       const interval = setInterval(() => {
@@ -24,7 +24,7 @@ const AttachmentProgress = ({
           if (prev >= 100) {
             clearInterval(interval);
             setStatus('success');
-            setIsAnimating(false);
+            // setIsAnimating(false); // Commented out since state is unused
             
             // Call onComplete after a brief delay to show success state
             setTimeout(() => {

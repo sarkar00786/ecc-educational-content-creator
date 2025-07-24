@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react';
+// fireEvent imported but not used - commented out
 import userEvent from '@testing-library/user-event'
 import Header from '../../components/layout/Header'
 
@@ -51,7 +52,7 @@ describe('Header Component', () => {
     
     // The header shows a toggle button - when on generation page, it shows "Content History" as the toggle option
     expect(screen.getByText('Content History')).toBeInTheDocument()
-    expect(screen.getByText('Magic Discussion')).toBeInTheDocument()
+    // Magic Discussion button has been removed as part of chat feature removal
   })
 
   it('highlights the current active page', () => {

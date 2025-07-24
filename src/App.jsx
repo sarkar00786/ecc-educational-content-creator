@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback, useMemo, Suspense, useReducer } from 'react';
+import { useState, useEffect, useCallback, useMemo, Suspense, useReducer } from 'react';
+import React from 'react';
 import { initializeApp, getApps } from 'firebase/app';
 import {
   getAuth,
@@ -38,11 +39,8 @@ import AnimatedIcon from './components/common/AnimatedIcon';
 import { NOTIFICATION_CONTEXTS } from './services/notificationService';
 import { progressiveOnboardingService } from './services/progressiveOnboardingService';
 import FeedbackForm from './components/content/FeedbackForm';
-import ChatPage from './components/chat/ChatPage';
-import AttachmentProgress from './components/common/AttachmentProgress';
-import CelebrationAnimation from './components/common/CelebrationAnimation';
-import PartyCelebration from './components/common/PartyCelebration';
 import WelcomeTrialBanner from './components/common/WelcomeTrialBanner';
+import RateLimitNotification from './components/common/RateLimitNotification';
 import { userTierManager } from './config/userTiers';
 
 // Lazy-loaded components for better performance
@@ -120,7 +118,7 @@ const AppContent = () => {
   const [user, setUser] = useState(null); // Firebase User object
   const [isAuthReady, setIsAuthReady] = useState(false); // Indicates if Firebase Auth is initialized
   const [authMode, setAuthMode] = useState('auth'); // 'auth' or 'app'
-  const [currentPage, setCurrentPage] = useState('generation'); // 'generation', 'history', or 'chat'
+  const [currentPage, setCurrentPage] = useState('generation');
   const [theme, setTheme] = useState('light'); // 'light' or 'dark'
   const [currentSettingsPage, setCurrentSettingsPage] = useState(null); // settings page state
   
@@ -236,15 +234,6 @@ const [userSettings, setUserSettings] = useState({
   }
 });
 
-// --- Chat State Variables (Phase 2 Requirements) ---
-const [linkedContentForChat, setLinkedContentForChat] = useState(null); // Content linked for chat discussion
-
-// --- Attachment Progress State ---
-const [attachmentProgress, setAttachmentProgress] = useState({
-  isVisible: false,
-  contentName: '',
-  contentId: null
-});
 
   // --- Output & Loading Status (Error Handling & User Feedback) ---
   const [generatedContent, setGeneratedContent] = useState('');
@@ -277,21 +266,22 @@ const {
   stopListening
 } = useVoiceControl();
 
-// --- Enhanced Notification Manager ---
+// --- Notification Manager Hook ---
 const {
   notifications,
-  showAchievement,
+  // showAchievement, // Unused - commented out
   removeNotification,
   updateContext
+  // showError,     // Unused - commented out
+  // showSuccess,   // Unused - commented out
+  // showInfo       // Unused - commented out
 } = useNotificationManager({
-  enableKeyboardNavigation: true,
-  enableSounds: false, // Disable sounds initially
   maxNotifications: 5,
-  defaultContext: NOTIFICATION_CONTEXTS.GLOBAL,
-  enableWebSocket: false, // Enable when WebSocket server is ready
-  enableOnboarding: true, // Enable progressive onboarding
-  userId: user?.uid
+  enableKeyboardNavigation: true,
+  enableSounds: false,
+  defaultContext: NOTIFICATION_CONTEXTS.GLOBAL
 });
+
 
 // --- Notification Center State ---
 const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false);
@@ -303,49 +293,26 @@ useEffect(() => {
   }
 }, [user]);
 
-// --- Celebration Animation State ---
-const [showChatCelebration, setShowChatCelebration] = useState(false);
+
+// --- Rate Limit Notification State ---
+const [showRateLimitNotification, setShowRateLimitNotification] = useState(false);
+
+// --- Rate Limit Notification Handlers ---
+const handleShowRateLimitNotification = useCallback(() => {
+  setShowRateLimitNotification(true);
+}, []);
+
+const handleHideRateLimitNotification = useCallback(() => {
+  setShowRateLimitNotification(false);
+}, []);
+
+const handleUpgradeClick = useCallback(() => {
+  setCurrentPage('purchase');
+  setShowRateLimitNotification(false);
+}, []);
 
 // --- Callback Handlers (Must be declared before any early returns) ---
-// Handler for linking content to chat with seamless progress indicator
-const handleLinkContentToChat = useCallback(async (contentData) => {
-  try {
-    // Start the attachment process with progress indicator
-    setAttachmentProgress({
-      isVisible: true,
-      contentName: contentData.name || 'Untitled Content',
-      contentId: contentData.id
-    });
-    
-    // Simulate attachment progress (in a real app, this would be actual async operations)
-    // This could include: validating content, preprocessing, setting up chat context, etc.
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Set the linked content
-    setLinkedContentForChat(contentData);
-    setCurrentPage('chat');
-    setCurrentSettingsPage(null);
-    
-  } catch (error) {
-    console.error('Error attaching content to chat:', error);
-    setModalError('❌ Failed to attach content to chat');
-    // Hide progress indicator on error
-    setAttachmentProgress({
-      isVisible: false,
-      contentName: '',
-      contentId: null
-    });
-  }
-}, []);
 
-// Handler for attachment progress completion
-const handleAttachmentComplete = useCallback(() => {
-  setAttachmentProgress({
-    isVisible: false,
-    contentName: '',
-    contentId: null
-  });
-}, []);
 
 // --- Firebase Auth Init ---
 useEffect(() => {
@@ -521,7 +488,6 @@ const handlePageNavigation = useCallback((page) => {
 
   // Update notification context based on current page
   const contextMap = {
-    'chat': NOTIFICATION_CONTEXTS.CHAT,
     'generation': NOTIFICATION_CONTEXTS.CONTENT_GENERATION,
     'history': NOTIFICATION_CONTEXTS.GLOBAL,
     'purchase': NOTIFICATION_CONTEXTS.GLOBAL
@@ -529,30 +495,9 @@ const handlePageNavigation = useCallback((page) => {
   
   updateContext(contextMap[page] || NOTIFICATION_CONTEXTS.GLOBAL);
 
-  // Trigger celebration animation when navigating to Magic Discussion (chat page)
-  if (page === 'chat' && previousPage !== 'chat') {
-    console.log('🎉 Triggering chat celebration animation!');
-    console.log('🎉 Setting showChatCelebration to true');
-    setShowChatCelebration(true);
-    
-    // Show achievement notification for entering chat
-    showAchievement('🎉 Welcome to Magic Discussion! Start chatting with your AI assistant.', {
-      title: 'Chat Mode Activated',
-      category: 'onboarding'
-    });
-    
-    // Auto-hide celebration after animation completes
-    setTimeout(() => {
-      console.log('🎉 Auto-hiding celebration after timeout');
-      setShowChatCelebration(false);
-    }, 8000); // Longer duration to make it more visible
-  } else {
-    console.log(`⚠️ Not triggering celebration: page=${page}, previousPage=${previousPage}`);
-  }
-
   // Last navigated page tracking removed for cleanup
   console.log(`Navigating from ${previousPage} to ${page}`);
-}, [currentPage, updateContext, showAchievement]);
+}, [currentPage, updateContext]);
 
 // --- Voice Command Handler ---
 const handleVoiceCommand = useCallback((command) => {
@@ -582,15 +527,6 @@ const handleVoiceCommand = useCallback((command) => {
     return;
   }
 
-  if (normalizedCommand.includes('chat') || 
-      normalizedCommand.includes('discussion') ||
-      normalizedCommand.includes('chat mode') ||
-      normalizedCommand.includes('discussion mode')) {
-    handlePageNavigation('chat');
-    setVoiceFeedback('Navigating to Magic Discussion');
-    setVoiceFeedbackType('success');
-    return;
-  }
 
   // Settings navigation
   if (normalizedCommand.includes('my profile') || 
@@ -764,21 +700,21 @@ useEffect(() => {
 
   /**
    * Unified and enhanced callGeminiAPI function for all LLM interactions.
-   * Handles both chat functionality and content generation with comprehensive payload support.
-   * @param {Object|Array} data - The conversation history/payload for the LLM.
+   * Handles content generation with comprehensive payload support.
+   * @param {Object|Array} data - The payload for the LLM.
    * @returns {Promise<string>} - The text response from the LLM.
    */
-  const callGeminiAPI = useCallback(async (data) => {
+  const callGeminiAPI = useCallback(async (data, abortSignal) => {
     const apiUrl = '/.netlify/functions/generate-content';
 
     if (!data) {
       throw new Error('Invalid argument: data is required for this function.');
     }
 
-    // Enhanced payload processing with comprehensive support
+      // Enhanced payload processing with comprehensive support
     let payload;
     if (Array.isArray(data)) {
-      // Legacy chat history format - backward compatibility
+      // Legacy format - backward compatibility
       payload = data.length > 0 ? { contents: data } : null;
     } else if (typeof data === 'object') {
       // New unified payload format - handles all request types
@@ -789,11 +725,9 @@ useEffect(() => {
         // Add session info for better context
         sessionId: user?.uid || 'anonymous',
         timestamp: new Date().toISOString(),
-        // Include currentSubject, aiPersona, linkedChatContexts, linkedContent if available
+        // Include currentSubject and aiPersona if available
         currentSubject: data.currentSubject || null,
-        aiPersona: data.aiPersona || null,
-        linkedChatContexts: data.linkedChatContexts || [],
-        linkedContent: data.linkedContent || null
+        aiPersona: data.aiPersona || null
       };
     } else {
       throw new Error('Invalid data format. Expected object or array.');
@@ -810,18 +744,49 @@ useEffect(() => {
           'Content-Type': 'application/json',
           'X-Request-Source': 'ECC-App' // Add request source identifier
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        signal: abortSignal // Add AbortController support
       });
+
+      // Check if request was cancelled
+      if (abortSignal && abortSignal.aborted) {
+        throw new Error('Request was cancelled');
+      }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({
           error: 'Failed to parse error response',
           details: response.statusText
         }));
+        
+        // Check for rate limit errors in the response
+        const errorMessage = errorData.error || '';
+        const errorDetails = errorData.details || '';
+        const statusCode = response.status;
+        
+        // Enhanced rate limit detection
+        const isRateLimit = statusCode === 429 || 
+                           errorMessage.toLowerCase().includes('rate limit') ||
+                           errorMessage.toLowerCase().includes('too many requests') ||
+                           errorMessage.toLowerCase().includes('quota') ||
+                           errorDetails.toLowerCase().includes('rate limit') ||
+                           errorDetails.toLowerCase().includes('too many requests') ||
+                           errorDetails.toLowerCase().includes('quota');
+        
+        if (isRateLimit) {
+          handleShowRateLimitNotification();
+          throw new Error('Rate limit exceeded: Please wait a moment before trying again.');
+        }
+        
         throw new Error(`API error from Netlify Function: ${response.status} - ${errorData.details || errorData.error || errorData.message || 'Unknown error'}`);
       }
 
       const result = await response.json();
+
+      // Check again if request was cancelled after response
+      if (abortSignal && abortSignal.aborted) {
+        throw new Error('Request was cancelled');
+      }
 
       // The Netlify Function returns { generatedContent: text }
       if (result.generatedContent) {
@@ -832,6 +797,11 @@ useEffect(() => {
     } catch (fetchError) {
       console.error("Error in callGeminiAPI:", fetchError);
       
+      // Handle abort/cancellation
+      if (fetchError.name === 'AbortError' || fetchError.message.includes('cancelled')) {
+        throw new Error('Request was cancelled');
+      }
+      
       // Enhanced error handling with user-friendly messages
       if (fetchError.name === 'TypeError' && fetchError.message.includes('fetch')) {
         throw new Error('Network error: Unable to connect to the AI service. Please check your internet connection.');
@@ -839,7 +809,9 @@ useEffect(() => {
         throw new Error('Invalid request: Please check your input and try again.');
       } else if (fetchError.message.includes('401')) {
         throw new Error('Authentication error: Please try logging out and logging in again.');
-      } else if (fetchError.message.includes('429')) {
+      } else if (fetchError.message.includes('429') || fetchError.message.includes('Rate limit exceeded')) {
+        // Show rate limit notification instead of generic error
+        handleShowRateLimitNotification();
         throw new Error('Rate limit exceeded: Please wait a moment before trying again.');
       } else if (fetchError.message.includes('500')) {
         throw new Error('Server error: The AI service is temporarily unavailable. Please try again later.');
@@ -847,7 +819,7 @@ useEffect(() => {
       
       throw fetchError;
     }
-  }, [user]);
+  }, [user, handleShowRateLimitNotification]);
 
   /**
    * Enhanced parseTextQuizzes function with better error handling and format support.
@@ -1273,17 +1245,10 @@ setGeneratedContent(generatedContent);
   // --- State for selected content navigation ---
   const [selectedContentId, setSelectedContentId] = useState(null);
 
-  // Handler for navigating to content from chat
-  const handleNavigateToContent = (contentId) => {
-    setSelectedContentId(contentId);
-    setCurrentPage('history');
-    setCurrentSettingsPage(null);
-    setModalMessage('Opening content from chat attachment');
-  };
 
   // Memoized toast notifications to prevent unnecessary re-renders
-  const memoizedToastNotifications = useMemo(() => (
-    notifications.map(notification => (
+  const memoizedToastNotifications = useMemo(() => {
+    return notifications.map(notification => (
       <ToastNotification
         key={notification.id}
         message={notification.message}
@@ -1296,8 +1261,8 @@ setGeneratedContent(generatedContent);
         position={notification.position?.position || 'default'}
         persistent={notification.persistent}
       />
-    ))
-  ), [notifications, removeNotification]);
+    ));
+  }, [notifications, removeNotification]);
 
 
   // --- Conditional Rendering for Auth vs. Main App ---
@@ -1360,21 +1325,6 @@ setGeneratedContent(generatedContent);
       );
     }
     
-    if (currentPage === 'chat') {
-      return (
-        <ChatPage
-          user={user}
-          db={db}
-          onError={(error) => setModalError(error)}
-          onSuccess={(message) => setModalMessage(message)}
-          linkedContentForChat={linkedContentForChat}
-          setLinkedContentForChat={setLinkedContentForChat}
-          contentHistory={contentHistory}
-          onNavigateToContent={handleNavigateToContent}
-          callGeminiAPI={callGeminiAPI}
-        />
-      );
-    }
 
     if (currentPage === 'generation') {
       return (
@@ -1405,7 +1355,6 @@ setGeneratedContent(generatedContent);
           onError={() => setModalError('Failed to load history. Please try again later.')}
           onSuccess={(message) => setModalMessage(message)}
           contentHistory={contentHistory}
-          onLinkContentToChat={handleLinkContentToChat}
           selectedContentId={selectedContentId}
           onContentSelectionHandled={() => setSelectedContentId(null)}
         />
@@ -1447,29 +1396,28 @@ setGeneratedContent(generatedContent);
           onNotificationCenterToggle={() => setIsNotificationCenterOpen(!isNotificationCenterOpen)}
         />
         
-{/* Enhanced Notification System with In-Situ Notifications */}
-<InlineNotification
-  message="Complete your profile to unlock new features!"
-  targetSelector=".profile-completion-target"
-  position="right"
-  duration={10000}
-    actions={[{ label: 'Complete Now', handler: () => alert('Navigating to profile...'), primary: true }]}
-  showArrow
-/>
+        {/* Enhanced Notification System with In-Situ Notifications - Now Enabled */}
+        <InlineNotification
+          message="Complete your profile to unlock new features!"
+          targetSelector=".profile-completion-target"
+          position="right"
+          duration={10000}
+          actions={[{ label: 'Complete Now', handler: () => { setModalMessage('Navigating to profile...'); handleNavigateToSettings('profile'); }, primary: true }]}
+          showArrow
+        />
 
-{/* Notification Center */}
-{isNotificationCenterOpen && (
-    <NotificationCenter
-      isOpen={isNotificationCenterOpen}
-      onClose={() => setIsNotificationCenterOpen(false)}
-        notifications={notifications}
-        onMarkAsRead={(id) => console.log(`Marked ${id} as read`)}
-        onDeleteNotification={(id) => console.log(`Deleted notification ${id}`)}
-    preferences={{ soundEnabled: false, autoDismiss: true, maxNotifications: 5 }}
-      onUpdatePreferences={(prefs) => console.log('Updated preferences:', prefs)}
-  />
-)
-}
+        {/* Notification Center */}
+        {isNotificationCenterOpen && (
+          <NotificationCenter
+            isOpen={isNotificationCenterOpen}
+            onClose={() => setIsNotificationCenterOpen(false)}
+            notifications={notifications}
+            onMarkAsRead={(id) => console.log(`Marked ${id} as read`)}
+            onDeleteNotification={(id) => console.log(`Deleted notification ${id}`)}
+            preferences={{ soundEnabled: false, autoDismiss: true, maxNotifications: 5 }}
+            onUpdatePreferences={(prefs) => console.log('Updated preferences:', prefs)}
+          />
+        )}
         {/* Optimized Toast Notifications - Memoized to prevent unnecessary re-renders */}
         {memoizedToastNotifications}
         
@@ -1479,7 +1427,7 @@ setGeneratedContent(generatedContent);
             message={modalError} 
             type="error" 
             onClose={() => setModalError('')} 
-            position={currentPage === 'chat' ? 'chat' : 'default'} 
+            position={'default'}
           />
         )}
         {modalMessage && (
@@ -1487,42 +1435,25 @@ setGeneratedContent(generatedContent);
             message={modalMessage} 
             type="success" 
             onClose={() => setModalMessage('')} 
-            position={currentPage === 'chat' ? 'chat' : 'default'} 
+            position={'default'}
           />
         )}
         
         {/* Voice Command Feedback */}
         <VoiceFeedback message={voiceFeedback} type={voiceFeedbackType} />
         
-        {/* Attachment Progress */}
-        <AttachmentProgress 
-          isVisible={attachmentProgress.isVisible}
-          contentName={attachmentProgress.contentName}
-          onComplete={handleAttachmentComplete}
-          onError={() => {
-            setAttachmentProgress({
-              isVisible: false,
-              contentName: '',
-              contentId: null
-            });
-            setModalError('Failed to attach content to chat');
-          }}
-        />
         
-        {/* Celebration Animation for Magic Discussion Entry */}
-        {showChatCelebration && (
-          <PartyCelebration 
-          isActive={showChatCelebration}
-          onComplete={() => setShowChatCelebration(false)}
-          intensity="festive"
-          duration={8000}
-          enablePerformanceOptimization={true}
-          respectReducedMotion={true}
-          />
-        )}
         
         {/* Main Content */}
         <main className="flex-1 w-full overflow-hidden pt-16">
+          {/* Rate Limit Notification */}
+          {showRateLimitNotification && (
+            <RateLimitNotification
+              onClose={handleHideRateLimitNotification}
+              onUpgrade={handleUpgradeClick}
+            />
+          )}
+
           {/* Welcome Trial Banner - only shown on content generation interface */}
           {currentPage === 'generation' && !currentSettingsPage && (
             <div className="px-4 pt-4 pb-2">

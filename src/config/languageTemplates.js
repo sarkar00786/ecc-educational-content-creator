@@ -232,9 +232,9 @@ export const languageTemplates = {
 };
 
 // Function to generate contextual response based on intent and formality
-export const generateContextualResponse = (intent, formality = 'casual', emotion = 'neutral') => {
+export const generateContextualResponse = (intent, _formality = 'casual', emotion = 'neutral') => {
   const template = languageTemplates.UrduEnglish;
-  const level = template.formality_levels[formality] || template.formality_levels.casual;
+  // const level = template.formality_levels[formality] || template.formality_levels.casual;
   
   // Select appropriate pattern based on intent
   let patterns = [];
@@ -294,7 +294,7 @@ export const detectAndAdaptFormality = (userMessage) => {
 // Function to inject cultural markers naturally
 export const injectCulturalMarkers = (text, density = 'medium') => {
   const markers = languageTemplates.UrduEnglish.culturalMarkers;
-  const transitions = languageTemplates.UrduEnglish.transitions;
+  // const transitions = languageTemplates.UrduEnglish.transitions;
   
   let result = text;
   

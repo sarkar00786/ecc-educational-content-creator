@@ -12,7 +12,6 @@ const ContentHistoryPage = ({
   onSuccess, 
   contentHistory, 
   onLoadToEditor, 
-  onLinkContentToChat, 
   selectedContentId, 
   onContentSelectionHandled 
 }) => {
@@ -59,7 +58,7 @@ const ContentHistoryPage = ({
     return () => window.removeEventListener('resize', handleResize);
   }, [handleResize]);
 
-  // Auto-open content when selectedContentId is provided from chat navigation
+  // Auto-open content when selectedContentId is provided from navigation
   useEffect(() => {
     if (selectedContentId && contentHistoryList.length > 0) {
       const content = contentHistoryList.find(c => c.id === selectedContentId);
@@ -202,7 +201,6 @@ const ContentHistoryPage = ({
                   onClick={() => handleCardClick(content.id)}
                   onLoadToEditor={() => handleLoadToEditor(content)}
                   onDelete={() => handleDeleteRequest(content.id, content.name || 'Untitled Content')}
-                  onLinkToChat={onLinkContentToChat}
                   isSelected={state.currentSelectedContentId === content.id}
                 />
               ))
@@ -221,7 +219,6 @@ const ContentHistoryPage = ({
                 const content = contentHistoryList.find(c => c.id === state.currentSelectedContentId);
                 handleDeleteRequest(state.currentSelectedContentId, content?.name || 'Untitled Content');
               }}
-              onLinkToChat={onLinkContentToChat}
               isFullScreenMode={false}
               isSideView={true}
               isMobile={false}
@@ -245,7 +242,6 @@ const ContentHistoryPage = ({
               const content = contentHistoryList.find(c => c.id === state.currentSelectedContentId);
               handleDeleteRequest(state.currentSelectedContentId, content?.name || 'Untitled Content');
             }}
-            onLinkToChat={onLinkContentToChat}
             isFullScreenMode={true}
             isSideView={false}
             isMobile={state.isMobile}

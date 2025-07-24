@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { AlertCircle, RefreshCw, Shield, Wifi, Database } from 'lucide-react';
 
 const FirebaseErrorHandler = ({ 

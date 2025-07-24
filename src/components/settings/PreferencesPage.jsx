@@ -1,5 +1,5 @@
 import React, { useReducer, useEffect, useCallback } from 'react';
-import { auth, db, getAppId } from '../../services/firebase';
+import { db } from '../../services/firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { preferencesManager } from '../../utils/settings';
 import { useSettings } from '../../contexts/SettingsContext';

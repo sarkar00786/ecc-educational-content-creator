@@ -3,6 +3,7 @@ import { auth, db, getAppId } from '../../services/firebase';
 import { updateProfile, deleteUser, EmailAuthProvider, reauthenticateWithCredential, updateEmail } from 'firebase/auth';
 import { doc, setDoc, deleteDoc } from 'firebase/firestore';
 import TierStatusIndicator from '../common/TierStatusIndicator';
+import UserAvatar from '../common/UserAvatar';
 import OTPVerification from '../auth/OTPVerification';
 
 const MyProfilePage = ({ user, onBack, onSuccess, onError }) => {
@@ -342,18 +343,20 @@ const handleDeleteAccount = useCallback(async () => {
 
           <div className="space-y-6">
             <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
-                {user?.photoURL ? (
-                  <img 
-                    src={user.photoURL} 
-                    alt="Profile" 
-                    className="w-16 h-16 rounded-full"
-                  />
-                ) : (
-                  <svg className="w-8 h-8 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              <div className="relative">
+                <UserAvatar 
+                  user={user} 
+                  size="lg" 
+                  showHoverEffect={true} 
+                  animated={true}
+                  fallbackToOwl={true}
+                />
+                {/* Enhanced Profile Indicator */}
+                <div className="absolute -bottom-1 -right-1 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full p-1.5 shadow-lg">
+                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
-                )}
+                </div>
               </div>
               <div className="flex-1">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">

@@ -3,8 +3,6 @@ export const APP_ID = 'project-q-34d01';
 
 // Performance thresholds
 export const PERFORMANCE_THRESHOLDS = {
-  CHAT_LOAD_TIME: 2000, // 2 seconds
-  MESSAGE_RESPONSE_TIME: 5000, // 5 seconds
   DB_QUERY_TIME: 1000, // 1 second
   MEMORY_USAGE: 100, // 100MB
   CACHE_HIT_RATE: 0.8, // 80%
@@ -16,8 +14,7 @@ export const UI_CONSTANTS = {
   SKELETON_ANIMATION_DURATION: 1500, // milliseconds
   NOTIFICATION_DURATION: 3000, // milliseconds
   DEBOUNCE_DELAY: 300, // milliseconds
-  PAGINATION_SIZE: 10,
-  MAX_VISIBLE_MESSAGES: 50
+  PAGINATION_SIZE: 10
 };
 
 // Cache configuration
@@ -38,8 +35,7 @@ export const MESSAGE_TYPES = {
 // Request types for API calls
 export const REQUEST_TYPES = {
   GENERATE_CONTENT: 'generateContent',
-  GENERATE_QUIZ: 'generateQuiz',
-  CHAT_MESSAGE: 'chatMessage'
+  GENERATE_QUIZ: 'generateQuiz'
 };
 
 // File validation constants

@@ -21,7 +21,7 @@ import {
   Divider,
   Portal
 } from '@chakra-ui/react';
-import { motion, AnimatePresence } from 'framer-motion';
+// import { motion, AnimatePresence } from 'framer-motion';
 import {
   User,
   LogOut,
@@ -174,11 +174,7 @@ const ModernHeader = ({
     >
       <Flex justify="space-between" align="center" maxW="8xl" mx="auto">
         {/* Left Section - Logo & Brand */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-        >
+        <div>
           <Flex align="center" gap={3}>
             <Box
               p={2}
@@ -206,24 +202,14 @@ const ModernHeader = ({
               </Text>
             </VStack>
           </Flex>
-        </motion.div>
+        </div>
 
         {/* Center Section - Search & AI Status */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
+        <div>
           <HStack spacing={4}>
             {/* AI Generation Status */}
-            <AnimatePresence>
-              {shouldShowProgress && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 0.3 }}
-                >
+            {shouldShowProgress && (
+              <div>
                   <Box
                     bg={getStageStyle(progress.stage).bg}
                     color={getStageStyle(progress.stage).color}
@@ -234,12 +220,9 @@ const ModernHeader = ({
                     alignItems="center"
                     gap={2}
                   >
-                    <motion.div
-                      animate={isGenerating ? { rotate: 360 } : {}}
-                      transition={isGenerating ? { duration: 2, repeat: Infinity, ease: "linear" } : {}}
-                    >
+                    <div>
                       {React.createElement(getStageStyle(progress.stage).icon, { size: 16 })}
-                    </motion.div>
+                    </div>
                     <Text fontSize="sm" fontWeight="medium">
                       {getStageText(progress.stage)}
                     </Text>
@@ -247,9 +230,8 @@ const ModernHeader = ({
                       {Math.round(progress.value)}%
                     </Text>
                   </Box>
-                </motion.div>
-              )}
-            </AnimatePresence>
+              </div>
+            )}
 
             {/* Quick Stats */}
             <HStack spacing={2}>
@@ -277,14 +259,10 @@ const ModernHeader = ({
               </Badge>
             </HStack>
           </HStack>
-        </motion.div>
+        </div>
 
         {/* Right Section - User Actions */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-        >
+        <div>
           <HStack spacing={3}>
             {/* Search Button */}
             <Tooltip label="Search Content" hasArrow>
@@ -442,18 +420,12 @@ const ModernHeader = ({
               </Portal>
             </Popover>
           </HStack>
-        </motion.div>
+        </div>
       </Flex>
 
       {/* Generation Progress Bar */}
-      <AnimatePresence>
-        {shouldShowProgress && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-          >
+      {shouldShowProgress && (
+        <div>
             <Box mt={4}>
               <Progress
                 value={progress.value}
@@ -474,9 +446,8 @@ const ModernHeader = ({
                 🤖 {getStageText(progress.stage)} {Math.round(progress.value)}%
               </Text>
             </Box>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
       
       {/* Settings Panel */}
       <SettingsPanel 
