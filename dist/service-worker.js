@@ -1,17 +1,21 @@
-// service-worker.js
+// service-worker.js - DISABLED FOR DEVELOPMENT
 
-// eslint-disable-next-line no-unused-vars
+// This service worker is completely disabled during development
+// to prevent fetch interception and network errors
+
+console.log('Service Worker: Disabled for development');
+
+// Immediately unregister if already registered
 self.addEventListener('install', (event) => {
-    console.log('Service Worker installing.');
-    // Cache static assets here
+    console.log('Service Worker: Skipping installation in development');
+    self.skipWaiting();
 });
 
-// eslint-disable-next-line no-unused-vars
 self.addEventListener('activate', (event) => {
-    console.log('Service Worker activating.');
+    console.log('Service Worker: Self-destructing in development');
+    event.waitUntil(
+        self.registration.unregister().then(() => {
+            console.log('Service Worker: Successfully unregistered');
+        })
+    );
 });
-
-// Temporarily disable fetch event handling to fix React errors
-// self.addEventListener('fetch', (event) => {
-//     // Service worker fetch logic disabled during development
-// });
